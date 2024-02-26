@@ -106,13 +106,11 @@ export function sendMessage(
 }
 
 export function version(conn: ConnInfo) {
-    const url = new URL('/api/v3/node/version', conn.apiEndpoint);
-    const headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'x-auth-token': conn.accessToken,
-    };
-    return fetch(url, { headers, signal: AbortSignal.timeout(30000) }).then((res) => res.json());
+    return HoprApi.getVersion({
+        apiEndpoint: conn.apiEndpoint,
+        apiToken: conn.accessToken,
+        timeout: DefaultNodeTimeout,
+    });
 }
 
 export function retrieveMessages(conn: ConnInfo, tag: number): Promise<{ messages: Message[] }> {
