@@ -1,4 +1,4 @@
-import LZString from 'lz-string';
+import LzString from 'lz-string';
 import * as Res from './result';
 
 export type ReqPayload = {
@@ -93,7 +93,7 @@ type TransportInfoPayload = {
 export function encodeReq(payload: ReqPayload): Res.Result<string> {
     const t = reqToTrans(payload);
     try {
-        const res = LZString.compressToUTF16(JSON.stringify(t));
+        const res = LzString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding request payload: ${ex}`);
@@ -102,7 +102,7 @@ export function encodeReq(payload: ReqPayload): Res.Result<string> {
 
 export function decodeReq(payload: string): Res.Result<ReqPayload> {
     try {
-        const res = JSON.parse(LZString.decompressFromUTF16(payload));
+        const res = JSON.parse(LzString.decompressFromUTF16(payload));
         return Res.ok(transToReq(res));
     } catch (ex) {
         return Res.err(`Error decoding request payload: ${ex}`);
@@ -112,7 +112,7 @@ export function decodeReq(payload: string): Res.Result<ReqPayload> {
 export function encodeResp(payload: RespPayload): Res.Result<string> {
     const t = respToTrans(payload);
     try {
-        const res = LZString.compressToUTF16(JSON.stringify(t));
+        const res = LzString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding response payload: ${ex}`);
@@ -121,7 +121,7 @@ export function encodeResp(payload: RespPayload): Res.Result<string> {
 
 export function decodeResp(payload: string): Res.Result<RespPayload> {
     try {
-        const res = JSON.parse(LZString.decompressFromUTF16(payload));
+        const res = JSON.parse(LzString.decompressFromUTF16(payload));
         return Res.ok(transToResp(res));
     } catch (ex) {
         return Res.err(`Error decoding response payload: ${ex}`);
@@ -131,7 +131,7 @@ export function decodeResp(payload: string): Res.Result<RespPayload> {
 export function encodeInfo(payload: InfoPayload): Res.Result<string> {
     const t = infoToTrans(payload);
     try {
-        const res = LZString.compressToUTF16(JSON.stringify(t));
+        const res = LzString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding info payload: ${ex}`);
@@ -140,7 +140,7 @@ export function encodeInfo(payload: InfoPayload): Res.Result<string> {
 
 export function decodeInfo(payload: string): Res.Result<InfoPayload> {
     try {
-        const res = JSON.parse(LZString.decompressFromUTF16(payload));
+        const res = JSON.parse(LzString.decompressFromUTF16(payload));
         return Res.ok(transToInfo(res));
     } catch (ex) {
         return Res.err(`Error decoding info payload: ${ex}`);

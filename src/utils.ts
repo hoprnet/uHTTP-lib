@@ -27,7 +27,7 @@ export function average(arr: number[]): number {
     return sum / arr.length || 0;
 }
 
-export function isValidURL(url: string) {
+export function isValidUrl(url: string) {
     if ('canParse' in URL) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
