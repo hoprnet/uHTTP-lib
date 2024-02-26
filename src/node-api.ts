@@ -1,4 +1,5 @@
-import WebSocket = require('isomorphic-ws');
+import { api as HoprApi } from '@hoprnet/hopr-sdk';
+import { DefaultNodeTimeout } from './config';
 
 /**
  * to be replaced with HOPR sdk soon.
@@ -79,13 +80,7 @@ export function connectWebsocket(conn: ConnInfo): WebSocket {
 export function sendMessage(
     conn: ConnInfo & { hops?: number; relay?: string },
     { recipient, tag, message }: { recipient: string; tag: number; message: string },
-): Promise<string | NodeError> {
-    const url = new URL('/api/v3/messages', conn.apiEndpoint);
-    const headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'x-auth-token': conn.accessToken,
-    };
+): Promise<string> {
     const payload: Record<string, any> = {
         body: message,
         peerId: recipient,
@@ -101,10 +96,13 @@ export function sendMessage(
             payload.hops = 1;
         }
     }
-    const body = JSON.stringify(payload);
-    return fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(30000) }).then(
-        (res) => res.json(),
-    );
+
+    return HoprApi.sendMessage({
+        apiEndpoint: conn.apiEndpoint,
+        apiToken: conn.accessToken,
+        timeout: DefaultNodeTimeout,
+        ...payload,
+    });
 }
 
 export function version(conn: ConnInfo) {
