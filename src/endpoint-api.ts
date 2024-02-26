@@ -11,7 +11,7 @@ export type Response = {
     text: string;
 };
 
-export async function fetchURL(
+export async function fetchUrl(
     endpoint: string,
     params?: Parameters,
 ): Promise<Res.Result<Response>> {

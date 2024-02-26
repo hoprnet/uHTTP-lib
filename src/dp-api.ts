@@ -1,11 +1,10 @@
-import { DefaultDPtimeout } from './settings';
+import { DefaultDpTimeout } from './config';
 
 import type { EntryNode } from './entry-node';
 import type { ExitNode } from './exit-node';
 
 export const NoMoreNodes = 'no more nodes';
 export const Unauthorized = 'unauthorized';
-
 
 /**
  * This module contains all communication with the discovery platform.
@@ -54,7 +53,7 @@ export function getNodes(ops: ClientOps, amount: number, since: Date): Promise<N
         'x-rpch-client': ops.clientId,
     };
 
-    return fetch(url, { headers, signal: AbortSignal.timeout(DefaultDPtimeout) }).then((res) => {
+    return fetch(url, { headers, signal: AbortSignal.timeout(DefaultDpTimeout) }).then((res) => {
         switch (res.status) {
             case 204: // none found
                 throw new Error(NoMoreNodes);
@@ -83,7 +82,7 @@ export function postQuota(
         lastSegmentLength,
     });
     return new Promise((pRes, pRej) => {
-        fetch(url, { headers, method: 'POST', body, signal: AbortSignal.timeout(DefaultDPtimeout) })
+        fetch(url, { headers, method: 'POST', body, signal: AbortSignal.timeout(DefaultDpTimeout) })
             .then((res) => {
                 if (res.status === 204) {
                     return pRes();
