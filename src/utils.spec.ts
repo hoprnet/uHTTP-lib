@@ -21,5 +21,4 @@ describe('test utils', function () {
         res = utils.versionCompare('', '1.4.0');
         expect(Res.isErr(res));
     });
-
 });

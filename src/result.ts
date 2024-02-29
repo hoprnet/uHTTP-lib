@@ -24,7 +24,7 @@ export function isErr<V, X>(res: Result<V, X>): res is ResultErr<X> {
 
 export function assertOk<V, X>(res: Result<V, X>): asserts res is ResultOk<V> {
     if (isErr(res)) {
-        throw new Error('expected ResultOk - got ResultErr')
+        throw new Error('expected ResultOk - got ResultErr');
     }
 }
 
