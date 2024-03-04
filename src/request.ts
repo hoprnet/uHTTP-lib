@@ -1,17 +1,15 @@
-import * as compatCrypto from '@rpch/compat-crypto';
-import { utils } from 'ethers';
+import * as Crypto from 'pHTTP-crypto';
 
 import * as Res from './result';
-import * as JRPC from './jrpc';
 import * as Payload from './payload';
 import * as Segment from './segment';
-import { shortPeerId } from './utils';
+import * as Utils from './utils';
 
 export type Request = {
     id: string; // uuid
     originalId?: string;
     provider: string;
-    req: JRPC.Request;
+    body?: string;
     entryPeerId: string;
     exitPeerId: string;
     startedAt: number;
@@ -25,7 +23,7 @@ export type Request = {
 
 export type UnboxRequest = {
     reqPayload: Payload.ReqPayload;
-    session: compatCrypto.Session;
+    session: Crypto.Session;
 };
 
 /**
@@ -35,7 +33,7 @@ export function create({
     id,
     originalId,
     provider,
-    req,
+    body,
     clientId,
     entryPeerId,
     exitPeerId,
@@ -50,7 +48,7 @@ export function create({
     id: string;
     originalId?: string;
     provider: string;
-    req: JRPC.Request;
+    body?: string;
     clientId: string;
     entryPeerId: string;
     exitPeerId: string;
@@ -61,11 +59,11 @@ export function create({
     hops?: number;
     reqRelayPeerId?: string;
     respRelayPeerId?: string;
-}): Res.Result<{ request: Request; session: compatCrypto.Session }> {
+}): Res.Result<{ request: Request; session: Crypto.Session }> {
     const payload: Payload.ReqPayload = {
         endpoint: provider,
         clientId,
-        body: JSON.stringify(req),
+        body,
         headers,
         method: 'POST',
         hops,
@@ -77,15 +75,15 @@ export function create({
         return resEncode;
     }
 
-    const data = utils.toUtf8Bytes(resEncode.res);
-    const resBox = compatCrypto.boxRequest({
+    const data = Utils.stringToUint8Array(resEncode.res);
+    const resBox = Crypto.boxRequest({
         message: data,
         exitPeerId,
         uuid: id,
         exitPublicKey,
         counterOffset,
     });
-    if (compatCrypto.isError(resBox)) {
+    if (Crypto.isError(resBox)) {
         return Res.err(resBox.error);
     }
 
@@ -94,7 +92,7 @@ export function create({
             id,
             originalId,
             provider,
-            req,
+            body,
             entryPeerId,
             exitPeerId,
             exitPublicKey,
@@ -120,13 +118,13 @@ export function messageToReq({
     exitPeerId: string;
     exitPrivateKey: Uint8Array;
 }): Res.Result<UnboxRequest> {
-    const resUnbox = compatCrypto.unboxRequest({
+    const resUnbox = Crypto.unboxRequest({
         message,
         uuid: requestId,
         exitPeerId,
         exitPrivateKey,
     });
-    if (compatCrypto.isError(resUnbox)) {
+    if (Crypto.isError(resUnbox)) {
         return Res.err(resUnbox.error);
     }
 
@@ -134,7 +132,7 @@ export function messageToReq({
         return Res.err('Crypto session without request object');
     }
 
-    const msg = utils.toUtf8String(resUnbox.session.request);
+    const msg = Utils.uint8ArrayToUTF8String(resUnbox.session.request);
     const resDecode = Payload.decodeReq(msg);
     if (Res.isErr(resDecode)) {
         return resDecode;
@@ -149,12 +147,12 @@ export function messageToReq({
 /**
  * Convert request to segments.
  */
-export function toSegments(req: Request, session: compatCrypto.Session): Segment.Segment[] {
+export function toSegments(req: Request, session: Crypto.Session): Segment.Segment[] {
     // we need the entry id ouside of of the actual encrypted payload
-    const entryIdData = utils.toUtf8Bytes(req.entryPeerId);
-    const reqData = session.request!;
-    const hexEntryId = utils.hexlify(entryIdData);
-    const hexData = utils.hexlify(reqData);
+    const entryIdData = Utils.stringToUint8Array(req.entryPeerId);
+    const reqData = session.request as Uint8Array;
+    const hexEntryId = Utils.uint8ArrayToUTF8String(entryIdData);
+    const hexData = Utils.uint8ArrayToUTF8String(reqData);
     const body = `${hexEntryId},${hexData}`;
     return Segment.toSegments(req.id, body);
 }
@@ -163,17 +161,17 @@ export function toSegments(req: Request, session: compatCrypto.Session): Segment
  * Pretty print request in human readable form.
  */
 export function prettyPrint(req: Request) {
-    const eId = shortPeerId(req.entryPeerId);
-    const xId = shortPeerId(req.exitPeerId);
+    const eId = Utils.shortPeerId(req.entryPeerId);
+    const xId = Utils.shortPeerId(req.exitPeerId);
     const path = [`e${eId}`];
     if (req.reqRelayPeerId) {
-        path.push(`r${shortPeerId(req.reqRelayPeerId)}`);
+        path.push(`r${Utils.shortPeerId(req.reqRelayPeerId)}`);
     } else if (req.hops !== 0) {
         path.push('(r)');
     }
     path.push(`x${xId}`);
     if (req.respRelayPeerId) {
-        path.push(`r${shortPeerId(req.respRelayPeerId)}`);
+        path.push(`r${Utils.shortPeerId(req.respRelayPeerId)}`);
     }
     const id = req.id;
     const prov = req.provider;

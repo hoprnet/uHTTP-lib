@@ -1,6 +1,7 @@
 import * as Res from './result';
 
 const textDecoder = new TextDecoder('utf-8');
+const textEncoder = new TextEncoder();
 
 export enum VrsnCmp {
     Identical,
@@ -62,6 +63,10 @@ export function hexStringToUint8Array(hexString: string) {
 
 export function uint8ArrayToUTF8String(arr: Uint8Array) {
     return textDecoder.decode(arr);
+}
+
+export function stringToUint8Array(str: string): Uint8Array {
+    return textEncoder.encode(str);
 }
 
 export function versionCompare(ref: string, version: string): Res.Result<VrsnCmp> {
