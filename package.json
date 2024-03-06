@@ -2,7 +2,18 @@
     "name": "pHTTP-lib",
     "version": "1.0.0",
     "description": "privateHTTP library",
-    "main": "src/index.ts",
+    "main": "./build/index.js",
+    "types": "./build/index.d.ts",
+    "files": [
+        "build"
+    ],
+    "keywords": [
+        "hopr",
+        "pHTTP"
+    ],
+    "engines": {
+        "node": ">=18.0.0"
+    },
     "license": "MIT",
     "private": false,
     "scripts": {
