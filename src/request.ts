@@ -75,7 +75,7 @@ export function create({
         return resEncode;
     }
 
-    const data = Utils.stringToUint8Array(resEncode.res);
+    const data = Utils.stringToBytes(resEncode.res);
     const resBox = Crypto.boxRequest({
         message: data,
         exitPeerId,
@@ -131,8 +131,7 @@ export function messageToReq({
     if (!resUnbox.session.request) {
         return Res.err('Crypto session without request object');
     }
-
-    const msg = Utils.uint8ArrayToUTF8String(resUnbox.session.request);
+    const msg = Utils.bytesToString(resUnbox.session.request);
     const resDecode = Payload.decodeReq(msg);
     if (Res.isErr(resDecode)) {
         return resDecode;
@@ -149,11 +148,9 @@ export function messageToReq({
  */
 export function toSegments(req: Request, session: Crypto.Session): Segment.Segment[] {
     // we need the entry id ouside of of the actual encrypted payload
-    const entryIdData = Utils.stringToUint8Array(req.entryPeerId);
+    const entryId = req.entryPeerId;
     const reqData = session.request as Uint8Array;
-    const hexEntryId = Utils.uint8ArrayToUTF8String(entryIdData);
-    const hexData = Utils.uint8ArrayToUTF8String(reqData);
-    const body = `${hexEntryId},${hexData}`;
+    const body = `${entryId},${reqData}`;
     return Segment.toSegments(req.id, body);
 }
 

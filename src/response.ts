@@ -60,11 +60,11 @@ export function respToMessage({
         return resEncode;
     }
 
-    const data = Utils.stringToUint8Array(resEncode.res);
+    const message = Utils.stringToBytes(resEncode.res);
     const resBox = Crypto.boxResponse(unboxSession, {
         uuid: requestId,
         entryPeerId,
-        message: data,
+        message,
     });
     if (Crypto.isError(resBox)) {
         return Res.err(resBox.error);
@@ -74,8 +74,8 @@ export function respToMessage({
         return Res.err('Crypto session without response object');
     }
 
-    const hexData = Utils.uint8ArrayToUTF8String(resBox.session.response);
-    return Res.ok(hexData);
+    const data = Utils.bytesToString(resBox.session.response);
+    return Res.ok(data);
 }
 
 export function messageToResp({
@@ -100,7 +100,7 @@ export function messageToResp({
         return Res.err('Crypto session without response object');
     }
 
-    const msg = Utils.uint8ArrayToUTF8String(resUnbox.session.response);
+    const msg = Utils.bytesToString(resUnbox.session.response);
     const resDecode = Payload.decodeResp(msg);
     if (Res.isErr(resDecode)) {
         return resDecode;
