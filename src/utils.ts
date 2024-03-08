@@ -1,6 +1,6 @@
 import * as Res from './result';
 
-const textDecoder = new TextDecoder('utf-8');
+const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 
 export enum VrsnCmp {
@@ -49,6 +49,24 @@ export function bytesToString(arr: Uint8Array) {
 
 export function stringToBytes(str: string): Uint8Array {
     return textEncoder.encode(str);
+}
+
+export function hexStringToBytes(hexString: string) {
+    // Remove the '0x' prefix if it exists
+    hexString = hexString.startsWith('0x') ? hexString.slice(2) : hexString;
+
+    // Check if the hex string has an odd length, and pad with a leading zero if needed
+    if (hexString.length % 2 !== 0) {
+        hexString = '0' + hexString;
+    }
+
+    // Create a Uint8Array by iterating through the hex string
+    const uint8Array = new Uint8Array(hexString.length / 2);
+    for (let i = 0; i < hexString.length; i += 2) {
+        uint8Array[i / 2] = parseInt(hexString.substr(i, 2), 16);
+    }
+
+    return uint8Array;
 }
 
 export function versionCompare(ref: string, version: string): Res.Result<VrsnCmp> {
