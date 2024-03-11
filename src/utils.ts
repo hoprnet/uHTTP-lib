@@ -51,6 +51,13 @@ export function stringToBytes(str: string): Uint8Array {
     return textEncoder.encode(str);
 }
 
+export function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
+    const res = new Uint8Array(left.length + right.length);
+    res.set(left);
+    res.set(right, left.length);
+    return res;
+}
+
 export function hexStringToBytes(hexString: string) {
     // Remove the '0x' prefix if it exists
     hexString = hexString.startsWith('0x') ? hexString.slice(2) : hexString;

@@ -70,7 +70,7 @@ export function toMessage({ segments, count }: Entry) {
     let i = 0;
     let res = '';
     while (i < count) {
-        res += segments.get(i)!.body;
+        res += (segments.get(i) as Segment).body;
         i++;
     }
     return res;

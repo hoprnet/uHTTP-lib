@@ -54,17 +54,19 @@ export function respToMessage({
     entryPeerId: string;
     respPayload: Payload.RespPayload;
     unboxSession: Crypto.Session;
-}): Res.Result<string> {
-    const resEncode = Payload.encodeResp(respPayload);
-    if (Res.isErr(resEncode)) {
-        return resEncode;
-    }
+}): Res.Result<Uint8Array> {
+    // TODO
+    // const resEncode = Payload.encodeResp(respPayload);
+    // if (Res.isErr(resEncode)) {
+    // return resEncode;
+    // }
 
-    const message = Utils.stringToBytes(resEncode.res);
+    const dataJSON = JSON.stringify(respPayload);
+    const data = Utils.stringToBytes(dataJSON);
     const resBox = Crypto.boxResponse(unboxSession, {
         uuid: requestId,
         entryPeerId,
-        message,
+        message: data,
     });
     if (Crypto.isError(resBox)) {
         return Res.err(resBox.error);
@@ -74,8 +76,7 @@ export function respToMessage({
         return Res.err('Crypto session without response object');
     }
 
-    const data = Utils.bytesToString(resBox.session.response);
-    return Res.ok(data);
+    return Res.ok(resBox.session.response);
 }
 
 export function messageToResp({
@@ -101,13 +102,13 @@ export function messageToResp({
     }
 
     const msg = Utils.bytesToString(resUnbox.session.response);
-    const resDecode = Payload.decodeResp(msg);
-    if (Res.isErr(resDecode)) {
-        return resDecode;
+    try {
+        const resp = JSON.parse(msg);
+        return Res.ok({
+            resp,
+            session: resUnbox.session,
+        });
+    } catch (ex: any) {
+        return Res.err(`Error during JSON parsing: ${ex.toString()}`);
     }
-
-    return Res.ok({
-        session: resUnbox.session,
-        resp: resDecode.res,
-    });
 }

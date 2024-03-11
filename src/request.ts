@@ -70,12 +70,14 @@ export function create({
         relayPeerId: respRelayPeerId,
         withDuration: measureRPClatency,
     };
-    const resEncode = Payload.encodeReq(payload);
-    if (Res.isErr(resEncode)) {
-        return resEncode;
-    }
+    // TODO
+    // const resEncode = Payload.encodeReq(payload);
+    // if (Res.isErr(resEncode)) {
+    // return resEncode;
+    // }
 
-    const data = Utils.stringToBytes(resEncode.res);
+    const json = JSON.stringify(payload);
+    const data = Utils.stringToBytes(json);
     const resBox = Crypto.boxRequest({
         message: data,
         exitPeerId,
@@ -132,15 +134,15 @@ export function messageToReq({
         return Res.err('Crypto session without request object');
     }
     const msg = Utils.bytesToString(resUnbox.session.request);
-    const resDecode = Payload.decodeReq(msg);
-    if (Res.isErr(resDecode)) {
-        return resDecode;
+    try {
+        const reqPayload = JSON.parse(msg);
+        return Res.ok({
+            reqPayload,
+            session: resUnbox.session,
+        });
+    } catch (ex: any) {
+        return Res.err(`Error during JSON parsing: ${ex.toString()}`);
     }
-
-    return Res.ok({
-        reqPayload: resDecode.res,
-        session: resUnbox.session,
-    });
 }
 
 /**
@@ -148,9 +150,9 @@ export function messageToReq({
  */
 export function toSegments(req: Request, session: Crypto.Session): Segment.Segment[] {
     // we need the entry id ouside of of the actual encrypted payload
-    const entryId = req.entryPeerId;
     const reqData = session.request as Uint8Array;
-    const body = `${entryId},${reqData}`;
+    const pIdBytes = Utils.stringToBytes(req.entryPeerId);
+    const body = Utils.concatBytes(pIdBytes, reqData);
     return Segment.toSegments(req.id, body);
 }
 
