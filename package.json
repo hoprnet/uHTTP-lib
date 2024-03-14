@@ -1,5 +1,5 @@
 {
-    "name": "pHTTP-lib",
+    "name": "@hoprnet/phttp-lib",
     "version": "1.0.0",
     "description": "privateHTTP library",
     "main": "./build/index.js",
