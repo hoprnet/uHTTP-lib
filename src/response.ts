@@ -9,14 +9,14 @@ import * as Utils from './utils';
  * Stats alongside Response.
  * segDur - duration of first segment http call started until last segment http call finished.
  * rpcDur - duration of RPC request from exit node
- * exitNodeDur - approximate execution duration up to encrypting and compressing response itself
+ * exitAppDur - approximate execution duration up to encrypting and compressing response itself
  * hoprDur - estimated duration of segments during request - response cycle inside hopr network
  */
 export type Stats =
     | {
           segDur: number;
           rpcDur: number;
-          exitNodeDur: number;
+          exitAppDur: number;
           hoprDur: number;
       }
     | { segDur: number };
