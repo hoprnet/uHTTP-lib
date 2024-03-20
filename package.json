@@ -1,6 +1,6 @@
 {
     "name": "@hoprnet/phttp-lib",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "privateHTTP library",
     "author": "HOPR Association",
     "main": "./build/index.js",
