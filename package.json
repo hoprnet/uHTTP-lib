@@ -18,8 +18,8 @@
     "license": "GPL-3.0",
     "scripts": {
         "build": "tsc",
-        "format": "prettier --write src/ .github/ .eslintrc.js .prettierrc.js jest.config.ts package.json tsconfig.json",
-        "format:ci": "prettier --check src/ .github/ .eslintrc.js .prettierrc.js jest.config.ts package.json tsconfig.json",
+        "format": "prettier --write src/ .github/ *.js *.ts *.json *.md",
+        "format:ci": "prettier --check src/ .github/ *.js *.ts *.json *.md",
         "lint": "eslint --fix src/",
         "lint:ci": "eslint --max-warnings 0 src/",
         "test": "jest --coverage"
