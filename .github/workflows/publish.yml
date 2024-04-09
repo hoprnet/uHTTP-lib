@@ -1,5 +1,11 @@
 name: Publish Package to npmjs
-on: workflow_dispatch
+on:
+    workflow_dispatch:
+        inputs:
+            tag:
+                type: string
+                required: true
+                default: latest
 
 jobs:
     publish:
@@ -21,6 +27,7 @@ jobs:
             - name: Building
               run: yarn build
 
-            - run: yarn publish
+            - name: Publish
+              run: yarn publish --tag ${{ github.event.inputs.tag }}
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
