@@ -39,6 +39,7 @@ export type QuotaParams = {
     rpcMethod?: string;
     segmentCount: number;
     lastSegmentLength?: number;
+    chainId?: string;
     type: 'request' | 'response';
 };
 
@@ -67,7 +68,7 @@ export function getNodes(ops: ClientOps, amount: number, since: Date): Promise<N
 
 export function postQuota(
     ops: NodeOps,
-    { clientId, segmentCount, rpcMethod, type, lastSegmentLength }: QuotaParams,
+    { clientId, segmentCount, rpcMethod, type, lastSegmentLength, chainId }: QuotaParams,
 ): Promise<void> {
     const url = new URL(`/api/v1/quota/${type}`, ops.discoveryPlatformEndpoint);
     const headers = {
@@ -80,6 +81,7 @@ export function postQuota(
         segmentCount,
         rpcMethod,
         lastSegmentLength,
+        chainId,
     });
     return new Promise((pRes, pRej) => {
         fetch(url, { headers, method: 'POST', body, signal: AbortSignal.timeout(DefaultDpTimeout) })
