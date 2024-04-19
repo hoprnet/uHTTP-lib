@@ -26,6 +26,7 @@ export type RespPayload =
           type: RespType.Resp;
           status: number; // HTTP status
           headers: Record<string, string>; // HTTP response headers
+          statusText?: string; // HTTP status text
           text?: string; // response text
           callDuration?: number;
           exitAppDuration?: number;
@@ -68,6 +69,7 @@ type TransportRespPayload =
           t: RespType.Resp;
           s: number; // HTTP status
           h: Record<string, string>; // HTTP response header
+          a?: string; // HTTP status text
           x?: string; // response text
           f?: number;
           e?: number;
@@ -188,6 +190,9 @@ function respToTrans(r: RespPayload): TransportRespPayload {
                 h: r.headers,
             };
 
+            if (r.statusText) {
+                t.a = r.statusText;
+            }
             if (r.text) {
                 t.x = r.text;
             }
@@ -250,6 +255,7 @@ function transToResp(t: TransportRespPayload): RespPayload {
             return {
                 type: RespType.Resp,
                 status: t.s,
+                statusText: t.a,
                 headers: t.h,
                 text: t.x,
                 callDuration: t.f,
