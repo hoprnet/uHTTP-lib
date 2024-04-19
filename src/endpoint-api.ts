@@ -1,5 +1,3 @@
-import * as Res from './result';
-
 export type Parameters = {
     body?: string;
     headers?: Record<string, string>;
@@ -9,12 +7,10 @@ export type Parameters = {
 export type Response = {
     status: number;
     text: string;
+    headers: Record<string, string>;
 };
 
-export async function fetchUrl(
-    endpoint: string,
-    params?: Parameters,
-): Promise<Res.Result<Response>> {
+export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
     return new Promise((resolve, reject) => {
         const url = new URL(endpoint);
         const headers = determineHeaders(params?.headers);
@@ -23,8 +19,9 @@ export async function fetchUrl(
         return fetch(url, { headers, method, body, signal: AbortSignal.timeout(30000) })
             .then(async (res) => {
                 const status = res.status;
+                const headers = convertRespHeaders(res.headers);
                 const text = await res.text();
-                return resolve(Res.ok({ status, text }));
+                return resolve({ status, text, headers });
             })
             .catch(reject);
     });
@@ -38,6 +35,14 @@ function determineHeaders(headers?: Record<string, string>) {
     return {
         'Content-Type': 'application/json',
     };
+}
+
+function convertRespHeaders(headers: Headers): Record<string, string> {
+    const hs: Record<string, string> = {};
+    for (const [k, v] of headers.entries()) {
+        hs[k] = v;
+    }
+    return hs;
 }
 
 function determineMethod(method?: string) {
