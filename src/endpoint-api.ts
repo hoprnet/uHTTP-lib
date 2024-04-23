@@ -6,6 +6,7 @@ export type Parameters = {
 
 export type Response = {
     status: number;
+    statusText?: string;
     text: string;
     headers: Record<string, string>;
 };
