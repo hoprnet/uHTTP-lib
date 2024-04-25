@@ -2,6 +2,7 @@ export type Parameters = {
     body?: string;
     headers?: Record<string, string>;
     method?: string;
+    timeout?: number;
 };
 
 export type Response = {
@@ -11,13 +12,16 @@ export type Response = {
     headers: Record<string, string>;
 };
 
+const DefaultTimeout = 30_000;
+
 export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
     return new Promise((resolve, reject) => {
         const url = new URL(endpoint);
-        const headers = determineHeaders(params?.headers);
+        const headers = params?.headers;
         const body = params?.body;
-        const method = determineMethod(params?.method);
-        return fetch(url, { headers, method, body, signal: AbortSignal.timeout(30000) })
+        const method = sanitizeMethod(params?.method);
+        const timeout = params?.timeout ?? DefaultTimeout;
+        return fetch(url, { headers, method, body, signal: AbortSignal.timeout(timeout) })
             .then(async (res) => {
                 const status = res.status;
                 const headers = convertRespHeaders(res.headers);
@@ -28,16 +32,6 @@ export async function fetchUrl(endpoint: string, params?: Parameters): Promise<R
     });
 }
 
-function determineHeaders(headers?: Record<string, string>) {
-    if (headers) {
-        return headers;
-    }
-
-    return {
-        'Content-Type': 'application/json',
-    };
-}
-
 function convertRespHeaders(headers: Headers): Record<string, string> {
     const hs: Record<string, string> = {};
     for (const [k, v] of headers.entries()) {
@@ -46,7 +40,7 @@ function convertRespHeaders(headers: Headers): Record<string, string> {
     return hs;
 }
 
-function determineMethod(method?: string) {
+function sanitizeMethod(method?: string) {
     const m = method?.toUpperCase().trim();
     if (m === 'POST' || m === 'PUT' || m === 'PATCH' || m === 'DELETE') {
         return m;
