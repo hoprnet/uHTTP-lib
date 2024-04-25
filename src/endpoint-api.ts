@@ -1,3 +1,9 @@
+import { DefaultEndpointTimeout } from './config';
+
+/**
+ * This module contains methods required to contact an external endpoint.
+ */
+
 export type Parameters = {
     body?: string;
     headers?: Record<string, string>;
@@ -12,15 +18,13 @@ export type Response = {
     headers: Record<string, string>;
 };
 
-const DefaultTimeout = 30_000;
-
 export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
     return new Promise((resolve, reject) => {
         const url = new URL(endpoint);
         const headers = params?.headers;
         const body = params?.body;
         const method = sanitizeMethod(params?.method);
-        const timeout = params?.timeout ?? DefaultTimeout;
+        const timeout = params?.timeout ?? DefaultEndpointTimeout;
         return fetch(url, { headers, method, body, signal: AbortSignal.timeout(timeout) })
             .then(async (res) => {
                 const status = res.status;
