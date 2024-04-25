@@ -7,6 +7,7 @@ export type ReqPayload = {
     body?: string; // request body
     headers?: Record<string, string>; // request headers, if left empty:  { 'Content-Type': 'application/json' }
     method?: string; // request method, if left empty: get
+    timeout?: number; // request timeout from the endpoint
     // dev/debug params
     hops?: number; // defaults to 1
     relayPeerId?: string; // default to autorouting
@@ -57,6 +58,7 @@ type TransportReqPayload = {
     b?: string; // body
     h?: Record<string, string>; // headers
     m?: string; // method
+    t?: number; // timeout
     // dev/debug
     n?: number; // hops
     r?: string; // relayPeerId
@@ -166,6 +168,9 @@ function reqToTrans(r: ReqPayload): TransportReqPayload {
     if (r.method) {
         t.m = r.method;
     }
+    if (r.timeout) {
+        t.t = r.timeout;
+    }
     if (r.hops) {
         t.n = r.hops;
     }
@@ -242,6 +247,7 @@ function transToReq(t: TransportReqPayload): ReqPayload {
         body: t.b,
         headers: t.h,
         method: t.m,
+        timeout: t.t,
         hops: t.n,
         relayPeerId: t.r,
         withDuration: t.w,
