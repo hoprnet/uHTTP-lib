@@ -20,9 +20,9 @@ export type Response = {
 
 export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
     const url = new URL(endpoint);
-    const headers = params?.headers;
     const body = params?.body;
-    const method = sanitizeMethod(params?.method);
+    const method = normalizeMethod(params?.method);
+    const headers = normalizeHeaders(url, params?.headers, body);
     const timeout = params?.timeout ?? DefaultEndpointTimeout;
     return fetch(url, { headers, method, body, signal: AbortSignal.timeout(timeout) }).then(
         async (res) => {
@@ -43,7 +43,30 @@ function convertRespHeaders(headers: Headers): Record<string, string> {
     return hs;
 }
 
-function sanitizeMethod(method?: string) {
+function normalizeHeaders(
+    url: URL,
+    headers?: Record<string, string>,
+    body?: string,
+): Record<string, string> | undefined {
+    if (!headers) {
+        return headers;
+    }
+    const res = {
+        ...headers,
+    };
+    const keys = new Set(Object.keys(headers).map((k) => k.trim().toLowerCase()));
+    if (keys.has('host')) {
+        res.host = url.href;
+    }
+    if (keys.has('content-length')) {
+        const s = body?.length ?? 0;
+        res['content-length'] = `${s}`;
+    }
+
+    return res;
+}
+
+function normalizeMethod(method?: string) {
     const m = method?.toUpperCase().trim();
     if (m === 'POST' || m === 'PUT' || m === 'PATCH' || m === 'DELETE') {
         return m;
