@@ -51,19 +51,23 @@ function normalizeHeaders(
     if (!headers) {
         return headers;
     }
-    const res = {
-        ...headers,
-    };
-    const keys = new Set(Object.keys(headers).map((k) => k.trim().toLowerCase()));
-    if (keys.has('host')) {
-        res.host = url.href;
-    }
-    if (keys.has('content-length')) {
-        const s = body?.length ?? 0;
-        res['content-length'] = `${s}`;
+    const headerMap = mergeHeaders(headers);
+
+    /// fix host header
+    if (headerMap.has('host')) {
+        headerMap.set('host', ['Host', url.host]);
     }
 
-    return res;
+    // fix content length
+    if (headerMap.has('content-length')) {
+        const size = body?.length ?? 0;
+        headerMap.set('content-length', ['Content-Length', `${size}`]);
+    }
+
+    return Array.from(headerMap.values()).reduce<Record<string, string>>((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+    }, {});
 }
 
 function normalizeMethod(method?: string) {
@@ -72,4 +76,36 @@ function normalizeMethod(method?: string) {
         return m;
     }
     return 'GET';
+}
+
+/**
+ * merge headers into this map:
+ * <key, ["headerKey", "headerValue1, headerValue2, ..."]>
+ * key - lowercase identify to easily reference header
+ * headerKey - preferably uppercase starting header key
+ * headerValue - merged values of all header key entries
+ *
+ */
+function mergeHeaders(headers: Record<string, string>): Map<string, [string, string]> {
+    return Object.entries(headers).reduce<Map<string, [string, string]>>((acc, [key, value]) => {
+        const mapKey = key.trim().toLowerCase();
+        if (mapKey.length === 0) {
+            return acc;
+        }
+        if (!acc.has(mapKey)) {
+            acc.set(mapKey, [key, value]);
+            return acc;
+        }
+
+        const [existKey, existVal] = acc.get(mapKey) as [string, string];
+        if (existVal.includes(value)) {
+            return acc;
+        }
+
+        const newValue = `${existVal}, ${value}`;
+        // prefer uppercase starting key
+        const newKey = existKey.charAt(0) === existKey.charAt(0).toUpperCase() ? existKey : key;
+        acc.set(mapKey, [newKey, newValue]);
+        return acc;
+    }, new Map());
 }
