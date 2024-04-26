@@ -1,49 +1,112 @@
-import * as Res from './result';
+import { DefaultEndpointTimeout } from './config';
+
+/**
+ * This module contains methods required to contact an external endpoint.
+ */
 
 export type Parameters = {
     body?: string;
     headers?: Record<string, string>;
     method?: string;
+    timeout?: number;
 };
 
 export type Response = {
+    headers: Record<string, string>;
     status: number;
+    statusText: string;
     text: string;
 };
 
-export async function fetchUrl(
-    endpoint: string,
-    params?: Parameters,
-): Promise<Res.Result<Response>> {
-    return new Promise((resolve, reject) => {
-        const url = new URL(endpoint);
-        const headers = determineHeaders(params?.headers);
-        const body = params?.body;
-        const method = determineMethod(params?.method);
-        return fetch(url, { headers, method, body, signal: AbortSignal.timeout(30000) })
-            .then(async (res) => {
-                const status = res.status;
-                const text = await res.text();
-                return resolve(Res.ok({ status, text }));
-            })
-            .catch(reject);
-    });
+export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
+    const url = new URL(endpoint);
+    const body = params?.body;
+    const method = normalizeMethod(params?.method);
+    const headers = normalizeHeaders(url, params?.headers, body);
+    const timeout = params?.timeout ?? DefaultEndpointTimeout;
+    return fetch(url, { headers, method, body, signal: AbortSignal.timeout(timeout) }).then(
+        async (res) => {
+            const status = res.status;
+            const statusText = res.statusText;
+            const headers = convertRespHeaders(res.headers);
+            const text = await res.text();
+            return { status, statusText, text, headers };
+        },
+    );
 }
 
-function determineHeaders(headers?: Record<string, string>) {
-    if (headers) {
+function convertRespHeaders(headers: Headers): Record<string, string> {
+    const hs: Record<string, string> = {};
+    for (const [k, v] of headers.entries()) {
+        hs[k] = v;
+    }
+    return hs;
+}
+
+function normalizeHeaders(
+    url: URL,
+    headers?: Record<string, string>,
+    body?: string,
+): Record<string, string> | undefined {
+    if (!headers) {
         return headers;
     }
+    const headerMap = mergeHeaders(headers);
 
-    return {
-        'Content-Type': 'application/json',
-    };
+    /// fix host header
+    if (headerMap.has('host')) {
+        headerMap.set('host', ['Host', url.host]);
+    }
+
+    // fix content length
+    if (headerMap.has('content-length')) {
+        const size = body?.length ?? 0;
+        headerMap.set('content-length', ['Content-Length', `${size}`]);
+    }
+
+    return Array.from(headerMap.values()).reduce<Record<string, string>>((acc, [key, value]) => {
+        acc[key] = value;
+        return acc;
+    }, {});
 }
 
-function determineMethod(method?: string) {
+function normalizeMethod(method?: string) {
     const m = method?.toUpperCase().trim();
     if (m === 'POST' || m === 'PUT' || m === 'PATCH' || m === 'DELETE') {
         return m;
     }
     return 'GET';
+}
+
+/**
+ * merge headers into this map:
+ * <key, ["headerKey", "headerValue1, headerValue2, ..."]>
+ * key - lowercase key to easily and uniformly reference header
+ * headerKey - preferably uppercase starting header key
+ * headerValue - merged values of all header key entries
+ *
+ */
+function mergeHeaders(headers: Record<string, string>): Map<string, [string, string]> {
+    return Object.entries(headers).reduce<Map<string, [string, string]>>((acc, [key, value]) => {
+        const mapKey = key.trim().toLowerCase();
+        if (mapKey.length === 0) {
+            return acc;
+        }
+
+        if (!acc.has(mapKey)) {
+            acc.set(mapKey, [key, value]);
+            return acc;
+        }
+
+        const [existKey, existVal] = acc.get(mapKey) as [string, string];
+        if (existVal.includes(value)) {
+            return acc;
+        }
+
+        const newValue = `${existVal}, ${value}`;
+        // prefer uppercase starting key
+        const newKey = existKey.charAt(0) === existKey.charAt(0).toUpperCase() ? existKey : key;
+        acc.set(mapKey, [newKey, newValue]);
+        return acc;
+    }, new Map());
 }
