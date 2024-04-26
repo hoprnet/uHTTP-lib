@@ -81,7 +81,7 @@ function normalizeMethod(method?: string) {
 /**
  * merge headers into this map:
  * <key, ["headerKey", "headerValue1, headerValue2, ..."]>
- * key - lowercase identify to easily reference header
+ * key - lowercase key to easily and uniformly reference header
  * headerKey - preferably uppercase starting header key
  * headerValue - merged values of all header key entries
  *
@@ -92,6 +92,7 @@ function mergeHeaders(headers: Record<string, string>): Map<string, [string, str
         if (mapKey.length === 0) {
             return acc;
         }
+
         if (!acc.has(mapKey)) {
             acc.set(mapKey, [key, value]);
             return acc;
