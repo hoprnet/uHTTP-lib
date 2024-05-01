@@ -10,3 +10,4 @@ export * as Result from './result';
 export * as Segment from './segment';
 export * as SegmentCache from './segment-cache';
 export * as Utils from './utils';
+export * as Routing from './routing';
