@@ -1,17 +1,25 @@
 import * as RequestCache from './routing/request-cache';
+import * as SegmentCache from './routing/segment-cache';
 
-export type Routing = {};
+export type Routing = {
+    requestCache: RequestCache.Cache;
+    segmentCache: SegmentCache.Cache;
+    settings: Settings;
+};
 
-export function init(): Routing {
+export type Settings = {};
+
+export function init(settings?: Settings): Routing {
+    const mergedSettings = mergeDefault(settings);
     return {
-    private readonly requestCache: RequestCache.Cache;
-    private readonly segmentCache: SegmentCache.Cache;
-    private readonly redoRequests: Set<string> = new Set();
-    private readonly nodesColl: NodesCollector;
-    private readonly ops;
-    private readonly chainIds: Map<string, string> = new Map();
-    private readonly hops?: number;
+        requestCache: RequestCache.init(),
+        segmentCache: SegmentCache.init(),
+        settings: mergedSettings,
     };
 }
 
 export function fetch(routing: Routing) {}
+
+function mergeDefault(settings?: Settings): Settings {
+    return {};
+}
