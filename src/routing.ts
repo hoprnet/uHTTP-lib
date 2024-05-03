@@ -251,12 +251,7 @@ export class Routing {
                 this.nodesColl.segmentSucceeded(request, segment, dur);
             })
             .catch((error) => {
-                log.error(
-                    'error sending %s: %s[%o]',
-                    Segment.prettyPrint(segment),
-                    JSON.stringify(error),
-                    error,
-                );
+                log.error('error sending %s: %o', Segment.prettyPrint(segment), error);
                 this.nodesColl.segmentFailed(request, segment);
                 this.resendRequest(request, entryNode, cacheEntry);
             });
@@ -362,12 +357,7 @@ export class Routing {
                 this.nodesColl.segmentSucceeded(request, segment, dur);
             })
             .catch((error) => {
-                log.error(
-                    'error resending %s: %s[%o]',
-                    Segment.prettyPrint(segment),
-                    JSON.stringify(error),
-                    error,
-                );
+                log.error('error resending %s: %o', Segment.prettyPrint(segment), error);
                 this.nodesColl.segmentFailed(request, segment);
                 this.removeRequest(request);
                 return cacheEntry.reject('Sending message failed');
