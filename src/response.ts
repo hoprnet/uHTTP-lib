@@ -23,21 +23,11 @@ export type Stats =
 
 export type Response = {
     status: number;
+    statusText: string;
+    text: string;
+    headers: Record<string, string>;
     stats?: Stats;
-    text: () => Promise<string>;
-    json: () => Promise<object>;
 };
-
-export class SendError extends Error {
-    constructor(
-        message: string,
-        public readonly provider: string,
-        public readonly reqHeaders: Record<string, string>,
-    ) {
-        super(message);
-        this.name = 'SendError';
-    }
-}
 
 export type UnboxResponse = {
     resp: Payload.RespPayload;
@@ -55,12 +45,6 @@ export function respToMessage({
     respPayload: Payload.RespPayload;
     unboxSession: Crypto.Session;
 }): Res.Result<Uint8Array> {
-    // TODO
-    // const resEncode = Payload.encodeResp(respPayload);
-    // if (Res.isErr(resEncode)) {
-    // return resEncode;
-    // }
-
     const dataJSON = JSON.stringify(respPayload);
     const data = Utils.stringToBytes(dataJSON);
     const resBox = Crypto.boxResponse(unboxSession, {

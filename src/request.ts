@@ -13,7 +13,7 @@ export type Request = {
     entryPeerId: string;
     exitPeerId: string;
     startedAt: number;
-    measurelatency: boolean;
+    measureLatency: boolean;
     lastSegmentEndedAt?: number;
     headers?: Record<string, string>;
     hops?: number;
@@ -32,7 +32,7 @@ export type CreateOptions = {
     exitPeerId: string;
     exitPublicKey: Uint8Array;
     counterOffset: number;
-    measurelatency: boolean;
+    measureLatency: boolean;
     headers?: Record<string, string>;
     method?: string;
     hops?: number;
@@ -60,7 +60,7 @@ export function create({
     exitPeerId,
     exitPublicKey,
     counterOffset,
-    measurelatency,
+    measureLatency,
     headers,
     method,
     hops,
@@ -77,7 +77,7 @@ export function create({
         method,
         hops,
         relayPeerId: respRelayPeerId,
-        withDuration: measurelatency,
+        withDuration: measureLatency,
         chainId,
         timeout,
     };
@@ -111,7 +111,7 @@ export function create({
             exitPublicKey,
             headers,
             hops,
-            measurelatency,
+            measureLatency,
             reqRelayPeerId,
             respRelayPeerId,
             startedAt: performance.now(),

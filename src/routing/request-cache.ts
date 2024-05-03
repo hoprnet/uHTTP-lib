@@ -8,7 +8,7 @@ export type Cache = Map<string, Entry>; // id -> Request
 export type Entry = {
     request: Request.Request;
     resolve: (res: Response.Response) => void;
-    reject: (error: Response.SendError) => void;
+    reject: (error: string) => void;
     session: Crypto.Session;
     timer: ReturnType<typeof setTimeout>;
 };
@@ -31,7 +31,7 @@ export function add(
     }: {
         request: Request.Request;
         resolve: (res: Response.Response) => void;
-        reject: (error: Response.SendError) => void;
+        reject: (error: string) => void;
         session: Crypto.Session;
         timer: ReturnType<typeof setTimeout>;
     },

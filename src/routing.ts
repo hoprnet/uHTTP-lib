@@ -126,70 +126,80 @@ export class Routing {
         }
     };
 
-    public fetch = async (endpoint: URL | string, options?: FetchOptions): Promise<Response> => {
+    public fetch = async (
+        endpoint: URL | string,
+        options?: FetchOptions,
+    ): Promise<Response.Response> => {
         // throw on everything we are unable to do for now
-        ['browsingTopics', 'cache', 'credentials', 'integrity', 'keepalive', 'mode', 'priority', 'redirect', 'referrer', 'referrerPolicy', 'signal'].forEach(o => {
-            if(options && o in options) {
-                throw new Error(`${o} is not supported yet`)
+        [
+            'browsingTopics',
+            'cache',
+            'credentials',
+            'integrity',
+            'keepalive',
+            'mode',
+            'priority',
+            'redirect',
+            'referrer',
+            'referrerPolicy',
+            'signal',
+        ].forEach((o) => {
+            if (options && o in options) {
+                throw new Error(`${o} is not supported yet`);
             }
         });
 
-            const timeout = options?.timeout ?? this.settings.timeout;
+        const timeout = options?.timeout ?? this.settings.timeout;
 
-            // gather entry - exit node pair
-            const resNodes = await this.nodesColl.requestNodePair(timeout).catch(err => {
-                log.error('Error finding node pair', err);
-                throw err
-            });
+        // gather entry - exit node pair
+        const resNodes = await this.nodesColl.requestNodePair(timeout).catch((err) => {
+            log.error('Error finding node pair', err);
+            throw err;
+        });
 
-            const { entryNode, exitNode, counterOffset }  = resNodes;
-            const id = RequestCache.generateId(this.requestCache);
-            const exitPublicKey: Utils.hexStringToBytes(exitNode.pubKey);
-            const reqOpts: Request.CreateOptions = {
-                id,
-                body: options?.body,
-                clientId: this.clientId,
-                provider: endpoint.toString(),
-                entryPeerId: entryNode.id,
-                exitPeerId: exitNode.id,
-                counterOffset,
-                hops: this.hops,
-                measureLatency: this.settings.measureLatency,
-                timeout,
+        const { entryNode, exitNode, counterOffset } = resNodes;
+        const id = RequestCache.generateId(this.requestCache);
+        const exitPublicKey = Utils.hexStringToBytes(exitNode.pubKey);
+        const reqOpts: Request.CreateOptions = {
+            id,
+            body: options?.body,
+            clientId: this.clientId,
+            provider: endpoint.toString(),
+            entryPeerId: entryNode.id,
+            exitPeerId: exitNode.id,
+            exitPublicKey,
+            counterOffset,
+            hops: this.hops,
+            measureLatency: this.settings.measureLatency,
+            timeout,
+        };
+        if (this.settings.forceManualRelaying) {
+            reqOpts.reqRelayPeerId = resNodes.reqRelayPeerId;
+            reqOpts.respRelayPeerId = resNodes.respRelayPeerId;
+        }
+        if (options?.headers) {
+            reqOpts.headers = Utils.headersRecord(options.headers);
+        }
 
-            }
-            if (this.settings.forceManualRelaying) {
-                reqOpts.reqRelayPeerId =  resNodes.reqRelayPeerId
-                reqOpts.respRelayPeerId= resNodes.respRelayPeerId
-            }
-            if (options?.headers) {
-                reqOpts.headers = Utils.headersRecord(options.headers);
-            }
+        // create request
+        const resReq = Request.create(reqOpts);
+        if (Result.isErr(resReq)) {
+            log.error('error creating request', resReq.error);
+            throw new Error('Unable to create request object');
+        }
 
-            // create request
-            const resReq = Request.create(reqOpts);
-            if (Result.isErr(resReq)) {
-                log.error('error creating request', resReq.error);
-                throw new Error('Unable to create request object');
-            }
+        // split request to segments
+        const { request, session } = resReq.res;
+        const segments = Request.toSegments(request, session);
 
-            // split request to segments
-            const { request, session } = resReq.res;
-            const segments = Request.toSegments(request, session);
-
-            // set request expiration timer
-            const timer = setTimeout(() => {
-                log.error(
-                    '%s expired after %dms timeout',
-                    Request.prettyPrint(request),
-                    timeout,
-                );
-                this.removeRequest(request);
-                throw new Error("Request timed out");
-            }, timeout);
+        // set request expiration timer
+        const timer = setTimeout(() => {
+            log.error('%s expired after %dms timeout', Request.prettyPrint(request), timeout);
+            this.removeRequest(request);
+            throw new Error('Request timed out');
+        }, timeout);
 
         return new Promise((resolve, reject) => {
-
             // keep tabs on request
             const entry = RequestCache.add(this.requestCache, {
                 request,
@@ -276,7 +286,7 @@ export class Routing {
 
         // generate new request
         const id = RequestCache.generateId(this.requestCache);
-            const exitPublicKey: Utils.hexStringToBytes(exitNode.pubKey);
+        const exitPublicKey = Utils.hexStringToBytes(fallback.exitNode.pubKey);
         const resReq = Request.create({
             id,
             originalId: origReq.id,
@@ -287,7 +297,7 @@ export class Routing {
             exitPeerId: fallback.exitNode.id,
             exitPublicKey,
             counterOffset: fallback.counterOffset,
-            measurelatency: origReq.measurelatency,
+            measureLatency: origReq.measureLatency,
             headers: origReq.headers,
             hops: origReq.hops,
             reqRelayPeerId: fallback.reqRelayPeerId,
@@ -296,7 +306,7 @@ export class Routing {
 
         if (Result.isErr(resReq)) {
             log.error('error creating fallback request', resReq.error);
-            throw new Error( 'Unable to create fallback request object');
+            throw new Error('Unable to create fallback request object');
         }
 
         // split request to segments
@@ -440,31 +450,23 @@ export class Routing {
                     headers: resp.headers,
                     text: resp.text,
                 };
-                if (request.measurelatency) {
+                if (request.measureLatency) {
                     r.stats = stats;
                 }
                 return resolve(r);
             }
             case Payload.RespType.CounterFail: {
                 const counter = reqEntry.session.updatedTS;
-                return reject(`Message out of counter range. Exit node expected message counter near ${resp.counter} - request got ${counter}.`);
+                return reject(
+                    `Message out of counter range. Exit node expected message counter near ${resp.counter} - request got ${counter}.`,
+                );
             }
             case Payload.RespType.DuplicateFail:
                 return reject(
-                    new Response.SendError(
-                        'Message duplicate error. Exit node rejected already processed message',
-                        request.provider,
-                        this.errHeaders(request.headers),
-                    ),
+                    'Message duplicate error. Exit node rejected already processed message',
                 );
             case Payload.RespType.Error:
-                return reject(
-                    new Response.SendError(
-                        `Error attempting JSON RPC call: ${resp.reason}`,
-                        request.provider,
-                        this.errHeaders(request.headers),
-                    ),
-                );
+                return reject(`Error attempting JSON RPC call: ${resp.reason}`);
         }
     };
 
@@ -488,7 +490,6 @@ export class Routing {
             forceManualRelaying,
         };
     };
-
 
     private determineHops = (forceZeroHop: boolean) => {
         if (forceZeroHop) {
@@ -523,7 +524,7 @@ export class Routing {
     private stats = (responseTime: number, request: Request.Request, resp: Payload.RespPayload) => {
         const segDur = Math.round((request.lastSegmentEndedAt as number) - request.startedAt);
         if (
-            request.measurelatency &&
+            request.measureLatency &&
             'callDuration' in resp &&
             'exitAppDuration' in resp &&
             resp.callDuration &&
