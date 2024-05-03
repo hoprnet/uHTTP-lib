@@ -162,7 +162,6 @@ export class Routing {
         const exitPublicKey = Utils.hexStringToBytes(exitNode.pubKey);
         const reqOpts: Request.CreateOptions = {
             id,
-            body: options?.body,
             clientId: this.clientId,
             provider: endpoint.toString(),
             entryPeerId: entryNode.id,
@@ -179,6 +178,12 @@ export class Routing {
         }
         if (options?.headers) {
             reqOpts.headers = Utils.headersRecord(options.headers);
+        }
+        if (options?.body) {
+            reqOpts.body = options.body;
+        }
+        if (options?.method) {
+            reqOpts.method = options.method;
         }
 
         // create request
@@ -466,7 +471,7 @@ export class Routing {
                     'Message duplicate error. Exit node rejected already processed message',
                 );
             case Payload.RespType.Error:
-                return reject(`Error attempting JSON RPC call: ${resp.reason}`);
+                return reject(`Error attempting call: ${JSON.stringify(resp)}`);
         }
     };
 
@@ -498,7 +503,9 @@ export class Routing {
         return 1;
     };
 
-    private onVersions = (versions: DPapi.Versions) => {
+    private onVersions = (_versions: DPapi.Versions) => {
+        // TODO provide versioning info from backend
+        /*
         const vLib = versions.phttpLib;
         const cmp = Utils.versionCompare(vLib, Version);
         if (Result.isOk(cmp)) {
@@ -519,6 +526,7 @@ export class Routing {
         } else {
             log.error('error comparing versions: %s', cmp.error);
         }
+        */
     };
 
     private stats = (responseTime: number, request: Request.Request, resp: Payload.RespPayload) => {
