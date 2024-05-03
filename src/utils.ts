@@ -68,6 +68,23 @@ export function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
     return res;
 }
 
+export function headersRecord(headers: Headers | Record<string, string>) {
+    if (!headers) {
+        return undefined;
+    }
+
+    return Object.entries(headers).reduce<Record<string, string>>((acc, [k, v]) => {
+        if (v) {
+            if (Array.isArray(v)) {
+                acc[k] = v.join(', ');
+            } else {
+                acc[k] = v;
+            }
+        }
+        return acc;
+    }, {});
+}
+
 export function hexStringToBytes(hexString: string) {
     // Remove the '0x' prefix if it exists
     hexString = hexString.startsWith('0x') ? hexString.slice(2) : hexString;
