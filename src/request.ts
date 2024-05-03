@@ -13,13 +13,33 @@ export type Request = {
     entryPeerId: string;
     exitPeerId: string;
     startedAt: number;
-    measureRPClatency: boolean;
+    measurelatency: boolean;
     lastSegmentEndedAt?: number;
     headers?: Record<string, string>;
     hops?: number;
     reqRelayPeerId?: string;
     respRelayPeerId?: string;
     chainId?: string;
+};
+
+export type CreateOptions = {
+    id: string;
+    originalId?: string;
+    provider: string;
+    body?: string;
+    clientId: string;
+    entryPeerId: string;
+    exitPeerId: string;
+    exitPublicKey: Uint8Array;
+    counterOffset: number;
+    measurelatency: boolean;
+    headers?: Record<string, string>;
+    method?: string;
+    hops?: number;
+    reqRelayPeerId?: string;
+    respRelayPeerId?: string;
+    chainId?: string;
+    timeout?: number;
 };
 
 export type UnboxRequest = {
@@ -40,39 +60,26 @@ export function create({
     exitPeerId,
     exitPublicKey,
     counterOffset,
-    measureRPClatency,
+    measurelatency,
     headers,
+    method,
     hops,
     reqRelayPeerId,
     respRelayPeerId,
     chainId,
-}: {
-    id: string;
-    originalId?: string;
-    provider: string;
-    body?: string;
-    clientId: string;
-    entryPeerId: string;
-    exitPeerId: string;
-    exitPublicKey: Uint8Array;
-    counterOffset: number;
-    measureRPClatency: boolean;
-    headers?: Record<string, string>;
-    hops?: number;
-    reqRelayPeerId?: string;
-    respRelayPeerId?: string;
-    chainId?: string;
-}): Res.Result<{ request: Request; session: Crypto.Session }> {
+    timeout,
+}: CreateOptions): Res.Result<{ request: Request; session: Crypto.Session }> {
     const payload: Payload.ReqPayload = {
         endpoint: provider,
         clientId,
         body,
         headers,
-        method: 'POST',
+        method,
         hops,
         relayPeerId: respRelayPeerId,
-        withDuration: measureRPClatency,
+        withDuration: measurelatency,
         chainId,
+        timeout,
     };
     // TODO
     // const resEncode = Payload.encodeReq(payload);
@@ -104,7 +111,7 @@ export function create({
             exitPublicKey,
             headers,
             hops,
-            measureRPClatency,
+            measurelatency,
             reqRelayPeerId,
             respRelayPeerId,
             startedAt: performance.now(),

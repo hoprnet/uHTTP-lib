@@ -19,7 +19,7 @@ const log = RoutingUtils.logger(['sdk', 'nodes-collector']);
 const RoutesFetchInterval = 1e3 * 60 * 10; // 10 min
 const RoutesAmount = 10; // fetch 10 routes
 
-export default class NodesCollector {
+export class NodesCollector {
     private readonly nodePairs: Map<string, NodePair.NodePair> = new Map();
     private lastMatchedAt = new Date(0);
 
@@ -40,30 +40,6 @@ export default class NodesCollector {
             NodePair.destruct(np);
         }
         this.nodePairs.clear();
-    };
-
-    /**
-     * Ready for request receival.
-     */
-    public ready = async (timeout: number): Promise<boolean> => {
-        return new Promise((resolve, reject) => {
-            const start = performance.now();
-            const check = () => {
-                const now = performance.now();
-                const elapsed = now - start;
-                const res = NodeSel.routePair(this.nodePairs, this.forceManualRelaying);
-                if (Res.isOk(res)) {
-                    log.verbose('ready with route pair: %s', NodeSel.prettyPrint(res.res));
-                    return resolve(true);
-                }
-                if (elapsed > timeout) {
-                    log.error('timeout after %d waiting for ready: %s', elapsed, res.error);
-                    return reject(`timeout after ${elapsed} ms`);
-                }
-                setTimeout(check, 100);
-            };
-            check();
-        });
     };
 
     /**

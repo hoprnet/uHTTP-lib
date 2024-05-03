@@ -22,11 +22,6 @@ export type NodeOps = {
     timeout?: number;
 };
 
-export type Versions = {
-    sdk: string;
-    rpcServer: string;
-};
-
 export type Nodes = {
     entryNodes: EntryNode[];
     exitNodes: ExitNode[];
@@ -41,6 +36,10 @@ export type QuotaParams = {
     lastSegmentLength?: number;
     chainId?: string;
     type: 'request' | 'response';
+};
+
+export type Versions = {
+    phttpLib: string;
 };
 
 export function getNodes(ops: ClientOps, amount: number, since: Date): Promise<Nodes> {

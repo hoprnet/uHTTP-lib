@@ -18,3 +18,25 @@ export function logger(namespaces: string[]) {
         warn,
     };
 }
+
+export function setDebugScopeLevel(defaultLogLevel: string, scope?: string, level?: string) {
+    const scp = scope ? scope : '*';
+    const lvl = debugLevel(defaultLogLevel, level);
+    debug.enable([scp, lvl].join(','));
+}
+
+function debugLevel(defaultLogLevel: string, level?: string) {
+    const lvl = level ? level : defaultLogLevel;
+    switch (lvl.toLowerCase()) {
+        case 'error':
+            return '-*:warn,-*:info,-*:verbose';
+        case 'warn':
+            return '-*:info,-*:verbose';
+        case 'info':
+            return '-*:verbose';
+        case 'verbose':
+            return '';
+        default:
+            return debugLevel(defaultLogLevel);
+    }
+}
