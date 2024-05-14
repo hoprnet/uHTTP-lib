@@ -52,9 +52,14 @@ export function bytesToString(arr: Uint8Array) {
     return textDecoder.decode(arr);
 }
 
-export function base64ToBytes(base64: string): Uint8Array {
-    const binString = atob(base64);
-    return Uint8Array.from(binString, (m) => m.codePointAt(0) as number);
+export function base64ToBytes(base64: string): Res.Result<Uint8Array> {
+    try {
+        const binString = atob(base64);
+        return Res.ok(Uint8Array.from(binString, (m) => m.codePointAt(0) as number));
+    } catch (err: any) {
+        // DOMException InvalidCharacterError
+        return Res.err(err.toString());
+    }
 }
 
 export function stringToBytes(str: string): Uint8Array {
