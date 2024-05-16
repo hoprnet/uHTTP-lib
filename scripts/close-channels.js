@@ -45,7 +45,7 @@ async function closeChannel(channel) {
         console.log(
             `Moved ${printChannel(channel)} to ${res.channelStatus} after ${printElapsed(elapsed)}`,
         );
-        return { id: channel.id, receipt: res.receipt };
+        return res.receipt;
     } catch (err) {
         console.error(`Error closing ${printChannel(channel)}:`, err);
         throw err;
@@ -64,7 +64,8 @@ async function run() {
         await Promise.all(pRes);
         console.log('Closed all channels with receipts:');
         resMapping.forEach(async ({ ch, pRes }) => {
-            console.log(`${printChannel(ch)}: ${await pRes}`);
+            const receipt = await pRes;
+            console.log(`${printChannel(ch)}: ${receipt}`);
         });
     } else {
         console.log('no outgoing open channels found');
