@@ -31,13 +31,15 @@ function printChannel(ch) {
 
 async function closeChannel(channel) {
     const started = Date.now();
-    let t = setInterval(() => {
+
+    let ongoingTicker = setInterval(() => {
         const now = Date.now();
         const elapsed = now - started;
         console.log(
             `Still waiting on closure response since ${printElapsed(elapsed)} for channel ${printChannel(channel)}`,
         );
     }, 30e3);
+
     try {
         const res = await api.closeChannel({ channelId: channel.id, ...lastingPayload });
         const now = Date.now();
@@ -50,7 +52,7 @@ async function closeChannel(channel) {
         console.error(`Error closing ${printChannel(channel)}:`, err);
         throw err;
     } finally {
-        clearInterval(t);
+        clearInterval(ongoingTicker);
     }
 }
 
