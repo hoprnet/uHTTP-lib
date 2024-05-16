@@ -15,7 +15,7 @@ if (!apiToken) {
 const payload = { apiEndpoint, apiToken };
 const lastingPayload = { timeout, ...payload };
 
-function formatElapsed(elMs) {
+function printElapsed(elMs) {
     const seconds = Math.round(elMs / 1000);
     if (seconds > 60) {
         const minutes = Math.floor(seconds / 60);
@@ -25,27 +25,29 @@ function formatElapsed(elMs) {
     return `${seconds}s`;
 }
 
+function printChannel(ch) {
+    return `Channel[${ch.id},${ch.status},${ch.peerAddress}]`;
+}
+
 async function closeChannel(channel) {
-    const sChannel = `Channel[${channel.id},${channel.status},${channel.peerAddress}]`;
     const started = Date.now();
     let t = setInterval(() => {
         const now = Date.now();
         const elapsed = now - started;
         console.log(
-            `Still waiting on closure response since ${formatElapsed(elapsed)} for channel ${sChannel}`,
+            `Still waiting on closure response since ${printElapsed(elapsed)} for channel ${printChannel(channel)}`,
         );
     }, 30e3);
     try {
         const res = await api.closeChannel({ channelId: channel.id, ...lastingPayload });
         const now = Date.now();
         const elapsed = now - started;
-        console.log(`Moved ${sChannel} to ${res.channelStatus} after ${formatElapsed(elapsed)}`);
+        console.log(
+            `Moved ${printChannel(channel)} to ${res.channelStatus} after ${printElapsed(elapsed)}`,
+        );
         return { id: channel.id, receipt: res.receipt };
     } catch (err) {
-        console.error(
-            `Error closing channel[${channel.id},${channel.status},${channel.peerAddress}]:`,
-            err,
-        );
+        console.error(`Error closing ${printChannel(channel)}:`, err);
         throw err;
     } finally {
         clearInterval(t);
@@ -57,8 +59,18 @@ async function run() {
     const outgoingOpen = channels.outgoing.filter(({ status }) => status === 'Open');
     if (outgoingOpen.length > 0) {
         console.log(`closing ${outgoingOpen.length} outgoing channels`);
-        const pRes = outgoingOpen.map(closeChannel);
-        console.log(await Promise.all(pRes));
+        const resMapping = outgoingOpen.map((ch) => ({ ch, pRes: closeChannel(ch) }));
+        const pRes = resMapping.map(({ pRes }) => pRes);
+        await Promise.all(pRes);
+        console.log('Closed all channels with receipts:');
+        resMapping.forEach(async ({ ch, pRes }) => {
+            console.log(`${printChannel(ch)}: ${await pRes}`);
+        });
+    } else {
+        console.log('no outgoing open channels found');
+        channels.outgoing.forEach((ch) => {
+            console.log(`found outgoing ${printChannel(ch)}`);
+        });
     }
 }
 
