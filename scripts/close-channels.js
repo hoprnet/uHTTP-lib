@@ -74,10 +74,10 @@ async function run() {
         const resMapping = outgoingOpen.map((ch) => ({ ch, pRes: closeChannel(ch) }));
         const pRes = resMapping.map(({ pRes }) => pRes);
         await Promise.all(pRes);
-        console.log('Closed all channels with receipts:');
+        console.log('Channel closure results with receipt on success:');
         resMapping.forEach(async ({ ch, pRes }) => {
-            const receipt = await pRes;
-            console.log(`${printChannel(ch)}: ${receipt}`);
+            const stMsg = await pRes;
+            console.log(`${printChannel(ch)}: ${stMsg}`);
         });
     } else {
         console.log('no outgoing open channels found');

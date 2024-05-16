@@ -12,7 +12,7 @@ if (!apiToken) {
     throw new Error("Missing 'HOPRD_ACCESS_TOKEN' env var");
 }
 
-const channelFunding = 1e3; // 1e6;
+const channelFunding = 1e6;
 const apiEndpoints = rawApiEndpoints.split(',');
 
 function printElapsed(elMs) {
@@ -77,10 +77,16 @@ async function run() {
     const pAddresses = apiEndpoints.map(getAddresses);
     const addresses = await Promise.all(pAddresses);
     const paths = routes(addresses);
-    console.log(`opening ${paths.length} channels on ${addresses.length} nodes`);
+    console.log(`checking ${paths.length} channels on ${addresses.length} nodes`);
     const pRes = paths.map(openChannel);
     const results = await Promise.all(pRes);
-    console.log('results', results);
+    results.forEach(({ from, to, res }) => {
+        if ('transactionReceipt' in res) {
+            console.log(`Opened channel ${from.hopr} -> ${to.hopr}: ${res.transactionReceipt}`);
+        } else {
+            console.log(`Checked channel ${from.hopr} -> ${to.hopr}: ${res}`);
+        }
+    });
 }
 
 run();
