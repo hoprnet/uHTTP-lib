@@ -49,8 +49,16 @@ async function closeChannel(channel) {
         );
         return res.receipt;
     } catch (err) {
+        if (
+            err.status === 'UNKNOWN_FAILURE' &&
+            err.error &&
+            err.error.startsWith('channel closure time has not elapsed yet')
+        ) {
+            console.warn(`Unable to close ${printChannel(channel)}: ${err.error}`);
+            return err.error;
+        }
         console.error(`Error closing ${printChannel(channel)}:`, err);
-        throw err;
+        return err.toString();
     } finally {
         clearInterval(ongoingTicker);
     }
@@ -58,7 +66,9 @@ async function closeChannel(channel) {
 
 async function run() {
     const channels = await api.getChannels(payload);
-    const outgoingOpen = channels.outgoing.filter(({ status }) => status === 'Open');
+    const outgoingOpen = channels.outgoing.filter(
+        ({ status }) => status === 'Open' || status === 'PendingToClose',
+    );
     if (outgoingOpen.length > 0) {
         console.log(`closing ${outgoingOpen.length} outgoing channels`);
         const resMapping = outgoingOpen.map((ch) => ({ ch, pRes: closeChannel(ch) }));
