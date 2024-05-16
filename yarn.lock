@@ -341,6 +341,16 @@
   resolved "https://registry.yarnpkg.com/@eslint/js/-/js-8.56.0.tgz#ef20350fec605a7f7035a01764731b2de0f3782b"
   integrity sha512-gMsVel9D7f2HLkBma9VbtzZRehRogVRfbr++f06nL2vnCGCNlzOD+/MUov/F4p8myyAHspEhVobgjpX64q5m6A==
 
+"@hoprnet/hopr-sdk@^2.1.0-beta.30":
+  version "2.1.0-beta.30"
+  resolved "https://registry.yarnpkg.com/@hoprnet/hopr-sdk/-/hopr-sdk-2.1.0-beta.30.tgz#bd98f5f5dd117255dca76836d1232c6bc8c937a6"
+  integrity sha512-UFZ/FT8MpU873t9ftdPkWAPbN6sRzefIUyO/6+ysXBAUtzHZUIAvNtJ69AFkVkdNnGoURuEapaQ4xz806Om44A==
+  dependencies:
+    debug "^4.3.4"
+    isomorphic-ws "^5.0.0"
+    ws "^8.16.0"
+    zod "^3.22.4"
+
 "@hoprnet/phttp-crypto@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@hoprnet/phttp-crypto/-/phttp-crypto-1.0.0.tgz#684815ab5c18b76f4458bf0ddf8bec4c15f653fe"
@@ -2999,3 +3009,8 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+zod@^3.22.4:
+  version "3.23.8"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.23.8.tgz#e37b957b5d52079769fb8097099b592f0ef4067d"
+  integrity sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==
