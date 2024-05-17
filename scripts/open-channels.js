@@ -77,7 +77,7 @@ async function run() {
     const pAddresses = apiEndpoints.map(getAddresses);
     const addresses = await Promise.all(pAddresses);
     const paths = routes(addresses);
-    console.log(`checking ${paths.length} channels on ${addresses.length} nodes`);
+    console.log(`Checking ${paths.length} channels on ${addresses.length} nodes`);
     const pRes = paths.map(openChannel);
     const results = await Promise.all(pRes);
     results.forEach(({ from, to, res }) => {
