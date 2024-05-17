@@ -66,12 +66,12 @@ async function closeChannel(channel) {
 
 async function run() {
     const channels = await api.getChannels(payload);
-    const outgoingOpen = channels.outgoing.filter(
-        ({ status }) => status === 'Open' || status === 'PendingToClose',
-    );
-    if (outgoingOpen.length > 0) {
-        console.log(`closing ${outgoingOpen.length} outgoing channels`);
-        const resMapping = outgoingOpen.map((ch) => ({ ch, pRes: closeChannel(ch) }));
+    const closableChannels = channels.outgoing
+        .concat(channels.incoming)
+        .filter(({ status }) => status === 'Open' || status === 'PendingToClose');
+    if (closableChannels.length > 0) {
+        console.log(`Closing ${closableChannels.length} incoming and outgoing channels`);
+        const resMapping = closableChannels.map((ch) => ({ ch, pRes: closeChannel(ch) }));
         const pRes = resMapping.map(({ pRes }) => pRes);
         await Promise.all(pRes);
         console.log('Channel closure results with receipt on success:');
@@ -80,9 +80,9 @@ async function run() {
             console.log(`${printChannel(ch)}: ${stMsg}`);
         });
     } else {
-        console.log('no outgoing open channels found');
+        console.log('No outgoing open channels found');
         channels.outgoing.forEach((ch) => {
-            console.log(`found outgoing ${printChannel(ch)}`);
+            console.log(`Found outgoing ${printChannel(ch)}`);
         });
     }
 }
