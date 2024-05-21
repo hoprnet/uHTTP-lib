@@ -90,6 +90,13 @@ function match(
     if (xNoInfoFails.length === 1) {
         return success(xNoInfoFails[0], 'only info req success');
     }
+
+    ////
+    // 1a. choose a random route for better privacy
+    return success(randomEl(xNoInfoFails), 'random selection');
+
+    ////
+    // 1b.
     const xLeastErrs = leastReqErrors(xNoInfoFails);
     if (xLeastErrs.length === 1) {
         return success(xLeastErrs[0], 'least request errors');
