@@ -151,7 +151,9 @@ export class NodesCollector {
         )
             .then(this.initNodes)
             .catch((err) => {
-                if (err.message === DPapi.Unauthorized) {
+                if ('cause' in err && 'code' in err.cause && err.cause.code === 'ECONNREFUSED') {
+                    this.logDPoffline();
+                } else if (err.message === DPapi.Unauthorized) {
                     this.logUnauthorized();
                 } else if (err.message === DPapi.NoMoreNodes && this.nodePairs.size === 0) {
                     this.logNoNodes();
@@ -214,6 +216,23 @@ export class NodesCollector {
 
         log.verbose('scheduling next node pair fetching in %dm%ds', logM, logS);
         setTimeout(() => this.fetchRoutes(), next);
+    };
+
+    private logDPoffline = () => {
+        const errMessage = [
+            '***',
+            'Discovery Platform appears offline',
+            '-',
+            'Do you have internet access?',
+            '***',
+        ].join(' ');
+        const errDeco = Array.from({ length: errMessage.length }, () => '*').join('');
+        log.error('');
+        log.error(`!!! ${errDeco} !!!`);
+        log.error(`!!! ${errMessage} !!!`);
+        log.error(`!!! ${errDeco} !!!`);
+        log.error('');
+        this.destruct();
     };
 
     private logUnauthorized = () => {
