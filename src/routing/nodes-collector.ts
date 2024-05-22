@@ -204,6 +204,7 @@ export class NodesCollector {
             'discovered %d node-pairs with %d exits, matched at %s',
             this.nodePairs.size,
             lookupExitNodes.size,
+            new Date(nodes.matchedAt),
         );
         this.versionListener(nodes.versions);
     };
