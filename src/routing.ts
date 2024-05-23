@@ -126,6 +126,26 @@ export class Routing {
         }
     };
 
+    /**
+     * Check if a route combination of entry and exit node is available.
+     */
+    public isReady = async (timeout?: number): Promise<boolean> => {
+        const tmt = timeout ?? this.settings.timeout;
+        try {
+            await this.nodesColl.requestNodePair(tmt);
+        } catch (err) {
+            log.warn('Error finding node pair during isReady', err);
+            return false;
+        }
+        return true;
+    };
+
+    /**
+     * Create a fetch request similar to fetchAPI.
+     * Throws error on yet unsupported options.
+     *
+     * Returns fetch typical Response object.
+     */
     public fetch = async (endpoint: URL | string, options?: FetchOptions): Promise<Response> => {
         // throw on everything we are unable to do for now
         [
