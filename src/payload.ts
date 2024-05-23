@@ -28,7 +28,7 @@ export type RespPayload =
           headers: Record<string, string>; // HTTP response headers
           status: number; // HTTP status
           statusText: string; // HTTP status text
-          data?: Uint8Array; // HTTP data
+          data?: string; // HTTP data
           callDuration?: number;
           exitAppDuration?: number;
       }
@@ -72,7 +72,7 @@ type TransportRespPayload =
           h: Record<string, string>; // HTTP response header
           s: number; // HTTP status
           a: string; // HTTP status text
-          d?: Uint8Array; // HTTP data
+          d?: string; // HTTP data
           f?: number;
           e?: number;
       }
@@ -96,42 +96,59 @@ type TransportInfoPayload = {
     r?: string[]; // shortIds of relays
 };
 
-export function encodeReq(payload: ReqPayload): Res.Result<string> {
+export function encodeReq(payload: ReqPayload): Res.Result<TransportReqPayload> {
     const t = reqToTrans(payload);
+    return Res.ok(t);
+    // TODO find better compression
+    /*
     try {
         const res = LZString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding request payload: ${ex}`);
     }
+    */
 }
 
-export function decodeReq(payload: string): Res.Result<ReqPayload> {
+export function decodeReq(payload: TransportReqPayload): Res.Result<ReqPayload> {
+    return Res.ok(transToReq(payload));
+
+    // TODO find better compression
+    /*
     try {
         const res = JSON.parse(LZString.decompressFromUTF16(payload));
         return Res.ok(transToReq(res));
     } catch (ex) {
         return Res.err(`Error decoding request payload: ${ex}`);
     }
+    */
 }
 
-export function encodeResp(payload: RespPayload): Res.Result<string> {
+export function encodeResp(payload: RespPayload): Res.Result<TransportRespPayload> {
     const t = respToTrans(payload);
+    return Res.ok(t);
+    // TODO find better compression
+    /*
     try {
         const res = LZString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding response payload: ${ex}`);
     }
+    */
 }
 
-export function decodeResp(payload: string): Res.Result<RespPayload> {
+export function decodeResp(payload: TransportRespPayload): Res.Result<RespPayload> {
+    return Res.ok(transToResp(payload));
+    // TODO find better compression
+    /*
     try {
         const res = JSON.parse(LZString.decompressFromUTF16(payload));
         return Res.ok(transToResp(res));
     } catch (ex) {
         return Res.err(`Error decoding response payload: ${ex}`);
     }
+    */
 }
 
 export function encodeInfo(payload: InfoPayload): Res.Result<string> {
@@ -194,9 +211,11 @@ function respToTrans(r: RespPayload): TransportRespPayload {
                 h: r.headers,
                 s: r.status,
                 a: r.statusText,
-                d: r.data,
             };
 
+            if (r.data) {
+                t.d = r.data;
+            }
             if (r.callDuration) {
                 t.f = r.callDuration;
             }

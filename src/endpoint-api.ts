@@ -1,3 +1,4 @@
+import * as Utils from './utils';
 import { DefaultEndpointTimeout } from './config';
 
 /**
@@ -15,7 +16,7 @@ export type Response = {
     headers: Record<string, string>;
     status: number;
     statusText: string;
-    text: string;
+    data?: string;
 };
 
 export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
@@ -29,8 +30,13 @@ export async function fetchUrl(endpoint: string, params?: Parameters): Promise<R
             const status = res.status;
             const statusText = res.statusText;
             const headers = convertRespHeaders(res.headers);
-            const text = await res.text();
-            return { status, statusText, text, headers };
+            if (res.body) {
+                const dataBuf: ArrayBuffer = await res.arrayBuffer();
+                const binData = new Uint8Array(dataBuf);
+                const base64Enc = Utils.bytesToBase64(binData);
+                return { status, statusText, headers, data: base64Enc };
+            }
+            return { status, statusText, headers };
         },
     );
 }

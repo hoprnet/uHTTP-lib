@@ -45,7 +45,11 @@ export function respToMessage({
     respPayload: Payload.RespPayload;
     unboxSession: Crypto.Session;
 }): Res.Result<Uint8Array> {
-    const dataJSON = JSON.stringify(respPayload);
+    const resTrnsprtResp = Payload.encodeResp(respPayload);
+    if (Res.isErr(resTrnsprtResp)) {
+        return resTrnsprtResp;
+    }
+    const dataJSON = JSON.stringify(resTrnsprtResp.res);
     const data = Utils.stringToBytes(dataJSON);
     const resBox = Crypto.boxResponse(unboxSession, {
         uuid: requestId,
@@ -87,7 +91,13 @@ export function messageToResp({
 
     const msg = Utils.bytesToString(resUnbox.session.response);
     try {
-        const resp = JSON.parse(msg);
+        const trnsprtResp = JSON.parse(msg);
+        const resResp = Payload.decodeResp(trnsprtResp);
+        if (Res.isErr(resResp)) {
+            return resResp;
+        }
+
+        const resp = resResp.res;
         return Res.ok({
             resp,
             session: resUnbox.session,

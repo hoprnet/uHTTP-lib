@@ -1,4 +1,5 @@
 import * as Res from './result';
+import * as Utils from './utils';
 
 // Maximum bytes we should be sending within the HOPR network.
 const MaxBytes = 400;
@@ -12,16 +13,11 @@ export type Segment = {
     body: string;
 };
 
-function bytesToBase64(bytes: Uint8Array) {
-    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
-    return btoa(binString);
-}
-
 /**
  * Slice data into segments.
  */
 export function toSegments(requestId: string, data: Uint8Array): Segment[] {
-    const dataString = bytesToBase64(data);
+    const dataString = Utils.bytesToBase64(data);
     const totalCount = Math.ceil(dataString.length / MaxBytes);
 
     const segments = [];
