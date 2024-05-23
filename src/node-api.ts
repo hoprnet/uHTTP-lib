@@ -153,7 +153,10 @@ export function accountAddresses(conn: ConnInfo) {
         'x-auth-token': conn.accessToken,
     };
     return fetch(url, { headers }).then((res) => {
-        return res.json() as unknown as { native: string; hopr: string };
+        if (res.ok) {
+            return res.json() as unknown as { native: string; hopr: string };
+        }
+        throw new Error(`Unexpected response status code: ${res.status}`);
     });
 }
 
