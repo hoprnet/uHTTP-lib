@@ -28,7 +28,7 @@ export type RespPayload =
           headers: Record<string, string>; // HTTP response headers
           status: number; // HTTP status
           statusText: string; // HTTP status text
-          data?: string; // HTTP data
+          data?: Uint8Array; // HTTP data
           callDuration?: number;
           exitAppDuration?: number;
       }
@@ -72,7 +72,7 @@ type TransportRespPayload =
           h: Record<string, string>; // HTTP response header
           s: number; // HTTP status
           a: string; // HTTP status text
-          d?: string; // HTTP data
+          d?: Uint8Array; // HTTP data
           f?: number;
           e?: number;
       }

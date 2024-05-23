@@ -21,14 +21,6 @@ export type Stats =
       }
     | { segDur: number };
 
-export type Response = {
-    status: number;
-    statusText: string;
-    text: string;
-    headers: Record<string, string>;
-    stats?: Stats;
-};
-
 export type UnboxResponse = {
     resp: Payload.RespPayload;
     session: Crypto.Session;

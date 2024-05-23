@@ -5,7 +5,7 @@ import * as NodesCollector from './routing/nodes-collector';
 import * as Payload from './payload';
 import * as Request from './request';
 import * as RequestCache from './routing/request-cache';
-import * as Response from './response';
+import * as IntResp from './response';
 import * as Result from './result';
 import * as RoutingUtils from './routing/utils';
 import * as Segment from './segment';
@@ -126,10 +126,7 @@ export class Routing {
         }
     };
 
-    public fetch = async (
-        endpoint: URL | string,
-        options?: FetchOptions,
-    ): Promise<Response.Response> => {
+    public fetch = async (endpoint: URL | string, options?: FetchOptions): Promise<Response> => {
         // throw on everything we are unable to do for now
         [
             'browsingTopics',
@@ -416,7 +413,7 @@ export class Routing {
         }
 
         const msgBytes = resMsgBytes.res;
-        const resUnbox = Response.messageToResp({
+        const resUnbox = IntResp.messageToResp({
             respData: msgBytes,
             request,
             session,
@@ -435,7 +432,7 @@ export class Routing {
         return reqEntry.reject('Unable to process response');
     };
 
-    private responseSuccess = ({ resp }: Response.UnboxResponse, reqEntry: RequestCache.Entry) => {
+    private responseSuccess = ({ resp }: IntResp.UnboxResponse, reqEntry: RequestCache.Entry) => {
         const { request, reject, resolve } = reqEntry;
         const responseTime = Math.round(performance.now() - request.startedAt);
         const stats = this.stats(responseTime, request, resp);
@@ -444,16 +441,10 @@ export class Routing {
 
         switch (resp.type) {
             case Payload.RespType.Resp: {
-                const r: Response.Response = {
-                    status: resp.status,
-                    statusText: resp.statusText,
-                    headers: resp.headers,
-                    text: resp.text,
-                };
-                if (request.measureLatency) {
-                    r.stats = stats;
+                if (resp.data) {
+                    return resolve(new Response(resp.data, resp));
                 }
-                return resolve(r);
+                return resolve(new Response(null, resp));
             }
             case Payload.RespType.CounterFail: {
                 const counter = reqEntry.session.updatedTS;

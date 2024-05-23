@@ -32,9 +32,8 @@ export async function fetchUrl(endpoint: string, params?: Parameters): Promise<R
             const headers = convertRespHeaders(res.headers);
             if (res.body) {
                 const dataBuf: ArrayBuffer = await res.arrayBuffer();
-                const binData = new Uint8Array(dataBuf);
-                const base64Enc = Utils.bytesToBase64(binData);
-                return { status, statusText, headers, data: base64Enc };
+                const data = new Uint8Array(dataBuf);
+                return { status, statusText, headers, data };
             }
             return { status, statusText, headers };
         },
