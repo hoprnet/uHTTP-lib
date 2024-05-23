@@ -1,4 +1,3 @@
-import * as Utils from './utils';
 import { DefaultEndpointTimeout } from './config';
 
 /**
@@ -12,14 +11,14 @@ export type Parameters = {
     timeout?: number;
 };
 
-export type Response = {
+export type GenericResponse = {
     headers: Record<string, string>;
     status: number;
     statusText: string;
-    data?: string;
+    data?: Uint8Array;
 };
 
-export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
+export async function fetchUrl(endpoint: string, params?: Parameters): Promise<GenericResponse> {
     const url = new URL(endpoint);
     const body = params?.body;
     const method = normalizeMethod(params?.method);
