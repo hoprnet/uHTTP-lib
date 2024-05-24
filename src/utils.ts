@@ -73,11 +73,10 @@ export function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
     return res;
 }
 
-export function headersRecord(headers: Headers | Record<string, string>) {
-    if (!headers) {
-        return undefined;
-    }
-
+/**
+ * Convert **Headers** to **Record<string, string> for easier usage.
+ */
+export function headersToRecord(headers: Headers | Record<string, string>): Record<string, string> {
     return Object.entries(headers).reduce<Record<string, string>>((acc, [k, v]) => {
         if (v) {
             if (Array.isArray(v)) {

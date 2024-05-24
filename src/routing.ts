@@ -194,7 +194,7 @@ export class Routing {
             reqOpts.respRelayPeerId = resNodes.respRelayPeerId;
         }
         if (options?.headers) {
-            reqOpts.headers = Utils.headersRecord(options.headers);
+            reqOpts.headers = Utils.headersToRecord(options.headers);
         }
         if (options?.body) {
             reqOpts.body = options.body;
