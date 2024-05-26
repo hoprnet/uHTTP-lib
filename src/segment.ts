@@ -17,7 +17,7 @@ export type Segment = {
  * Slice data into segments.
  */
 export function toSegments(requestId: string, data: Uint8Array): Segment[] {
-    const dataString = Utils.bytesToBase64(data);
+    const dataString = Utils.bytesToString(data);
     const totalCount = Math.ceil(dataString.length / MaxBytes);
 
     const segments = [];

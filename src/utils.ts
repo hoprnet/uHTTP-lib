@@ -43,23 +43,8 @@ export function isValidURL(url: string) {
     }
 }
 
-export function bytesToBase64(bytes: Uint8Array): string {
-    const str = bytesToString(bytes);
-    return btoa(str);
-}
-
 export function bytesToString(bytes: Uint8Array): string {
     return textDecoder.decode(bytes);
-}
-
-export function base64ToBytes(base64: string): Res.Result<Uint8Array> {
-    try {
-        const binString = atob(base64);
-        return Res.ok(stringToBytes(binString));
-    } catch (err: any) {
-        // DOMException InvalidCharacterError
-        return Res.err(err.toString());
-    }
 }
 
 export function stringToBytes(str: string): Uint8Array {
