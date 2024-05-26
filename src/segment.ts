@@ -76,6 +76,6 @@ export function toMessage({ requestId, nr, totalCount, body }: Segment) {
 /**
  * Pretty print segment in human readable form.
  */
-export function prettyPrint({ requestId, nr, totalCount }: Segment) {
-    return `segment[rId: ${requestId}, nr: ${nr}, total: ${totalCount}]`;
+export function prettyPrint({ requestId, nr, totalCount, body }: Segment) {
+    return `segment[rId: ${requestId}, ${nr}/${totalCount}, size: ${body.length}]`;
 }
