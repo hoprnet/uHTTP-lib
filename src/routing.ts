@@ -214,14 +214,14 @@ export class Routing {
         const { request, session } = resReq.res;
         const segments = Request.toSegments(request, session);
 
-        // set request expiration timer
-        const timer = setTimeout(() => {
-            log.error('%s expired after %dms timeout', Request.prettyPrint(request), timeout);
-            this.removeRequest(request);
-            throw new Error('Request timed out');
-        }, timeout);
-
         return new Promise((resolve, reject) => {
+            // set request expiration timer
+            const timer = setTimeout(() => {
+                log.error('%s expired after %dms timeout', Request.prettyPrint(request), timeout);
+                this.removeRequest(request);
+                reject('Request timed out');
+            }, timeout);
+
             // keep tabs on request
             const entry = RequestCache.add(this.requestCache, {
                 request,
