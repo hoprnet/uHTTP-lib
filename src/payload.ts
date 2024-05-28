@@ -73,8 +73,8 @@ type TransportRespPayload =
           s: number; // HTTP status
           a: string; // HTTP status text
           d?: Uint8Array; // HTTP data
-          f?: number;
-          e?: number;
+          f?: number; // callDuration
+          e?: number; // exitAppDuration
       }
     | {
           t: RespType.CounterFail;
@@ -256,32 +256,57 @@ function infoToTrans(r: InfoPayload): TransportInfoPayload {
 }
 
 function transToReq(t: TransportReqPayload): ReqPayload {
-    return {
+    const r: ReqPayload = {
         clientId: t.c,
         endpoint: t.e,
-        body: t.b,
-        headers: t.h,
-        method: t.m,
-        timeout: t.t,
-        hops: t.n,
-        relayPeerId: t.r,
-        withDuration: t.w,
-        chainId: t.i,
     };
+    if (t.b) {
+        r.body = t.b;
+    }
+    if (t.h) {
+        r.headers = t.h;
+    }
+    if (t.m) {
+        r.method = t.m;
+    }
+    if (t.t) {
+        r.timeout = t.t;
+    }
+    if (t.n) {
+        r.hops = t.n;
+    }
+    if (t.r) {
+        r.relayPeerId = t.r;
+    }
+    if (t.w) {
+        r.withDuration = t.w;
+    }
+    if (t.i) {
+        r.chainId = t.i;
+    }
+    return r;
 }
 
 function transToResp(t: TransportRespPayload): RespPayload {
     switch (t.t) {
-        case RespType.Resp:
-            return {
+        case RespType.Resp: {
+            const r: RespPayload = {
                 type: RespType.Resp,
                 headers: t.h,
                 status: t.s,
                 statusText: t.a,
-                data: t.d,
-                callDuration: t.f,
-                exitAppDuration: t.e,
             };
+            if (t.d) {
+                r.data = t.d;
+            }
+            if (t.f) {
+                r.callDuration = t.f;
+            }
+            if (t.e) {
+                r.exitAppDuration = t.e;
+            }
+            return r;
+        }
         case RespType.CounterFail:
             return {
                 type: RespType.CounterFail,
