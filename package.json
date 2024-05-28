@@ -26,6 +26,7 @@
         "test": "jest --coverage"
     },
     "devDependencies": {
+        "@changesets/cli": "^2.27.5",
         "@stylistic/eslint-plugin": "^1.5.4",
         "@types/debug": "^4.1.12",
         "@types/jest": "^29.5.11",
