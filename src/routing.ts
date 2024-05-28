@@ -134,7 +134,7 @@ export class Routing {
         try {
             await this.nodesColl.requestNodePair(tmt);
         } catch (err) {
-            log.warn('Error finding node pair during isReady', err);
+            log.warn('Error finding node pair during isReady: %s', err);
             return false;
         }
         return true;
