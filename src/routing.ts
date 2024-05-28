@@ -458,7 +458,8 @@ export class Routing {
         switch (resp.type) {
             case Payload.RespType.Resp: {
                 if (resp.data) {
-                    return resolve(new Response(resp.data, resp));
+                    const d = new Uint8Array(resp.data);
+                    return resolve(new Response(d, resp));
                 }
                 return resolve(new Response(null, resp));
             }

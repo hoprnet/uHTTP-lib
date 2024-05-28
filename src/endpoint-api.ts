@@ -15,7 +15,7 @@ export type GenericResponse = {
     headers: Record<string, string>;
     status: number;
     statusText: string;
-    data?: Uint8Array;
+    data?: number[];
 };
 
 export async function fetchUrl(endpoint: string, params?: Parameters): Promise<GenericResponse> {
@@ -31,7 +31,7 @@ export async function fetchUrl(endpoint: string, params?: Parameters): Promise<G
             const headers = convertRespHeaders(res.headers);
             if (res.body) {
                 const dataBuf: ArrayBuffer = await res.arrayBuffer();
-                const data = new Uint8Array(dataBuf);
+                const data = Array.from(new Uint8Array(dataBuf));
                 return { status, statusText, headers, data };
             }
             return { status, statusText, headers };
