@@ -75,7 +75,7 @@ export function connectWS(conn: ConnInfo): WebSocket {
     return new WebSocket(wsURL);
 }
 
-export function sendMessage(
+export async function sendMessage(
     conn: ConnInfo & { hops?: number; relay?: string },
     { recipient, tag, message }: { recipient: string; tag: number; message: string },
 ): Promise<string | NodeError> {
@@ -101,7 +101,12 @@ export function sendMessage(
         }
     }
     const body = JSON.stringify(payload);
-    return fetch(url, { method: 'POST', headers, body }).then((res) => res.json());
+    const res = await fetch(url, { method: 'POST', headers, body });
+    if (res.ok) {
+        return res.json();
+    }
+    const reason = await res.text();
+    throw new Error(`Error sending message [${res.status}]: ${reason}`);
 }
 
 export function version(conn: ConnInfo) {
