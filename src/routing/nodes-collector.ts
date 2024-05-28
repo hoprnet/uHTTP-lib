@@ -170,7 +170,7 @@ export class NodesCollector {
 
     private initNodes = (nodes: DPapi.Nodes) => {
         const lookupExitNodes = new Map(nodes.exitNodes.map((x) => [x.id, x]));
-        nodes.entryNodes.forEach((en) => {
+        for (const en of nodes.entryNodes) {
             const exitNodes = en.recommendedExits
                 .map((id) => lookupExitNodes.get(id) as ExitNode.ExitNode)
                 // ensure entry node not included in exits
@@ -194,12 +194,14 @@ export class NodesCollector {
                 );
                 this.nodePairs.set(NodePair.id(np), np);
             }
-        });
+        }
 
         this.removeRedundant();
 
         // ping all nodes
-        this.nodePairs.forEach((np) => NodePair.discover(np));
+        for (const [, np] of this.nodePairs) {
+            NodePair.discover(np);
+        }
         log.info(
             'discovered %d node-pairs with %d exits, matched at %s',
             this.nodePairs.size,

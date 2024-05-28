@@ -68,12 +68,12 @@ export function create(
 }
 
 export function addExitNodes(np: NodePair, exitNodes: ExitNode.ExitNode[]) {
-    exitNodes.forEach((x) => {
+    for (const x of exitNodes) {
         if (!np.exitNodes.has(x.id)) {
             np.exitNodes.set(x.id, x);
             np.exitDatas.set(x.id, ExitData.create());
         }
-    });
+    }
 }
 
 export function removeExitNode(np: NodePair, xId: string) {
@@ -325,7 +325,7 @@ function fetchMessages(np: NodePair) {
 }
 
 function incInfoResps(np: NodePair, infoResps: NodeAPI.Message[]) {
-    infoResps.forEach(({ body }) => {
+    for (const { body } of infoResps) {
         const payload = body.slice(body.indexOf('-') + 1);
         const resDec = Payload.decodeInfo(payload);
         if (Res.isErr(resDec)) {
@@ -352,7 +352,7 @@ function incInfoResps(np: NodePair, infoResps: NodeAPI.Message[]) {
         const t = np.infoTimeouts.get(peerId);
         clearTimeout(t);
         np.infoTimeouts.delete(peerId);
-    });
+    }
     checkStopInterval(np);
 }
 

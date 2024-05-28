@@ -148,23 +148,25 @@ export class Routing {
      */
     public fetch = async (endpoint: URL | string, options?: FetchOptions): Promise<Response> => {
         // throw on everything we are unable to do for now
-        [
-            'browsingTopics',
-            'cache',
-            'credentials',
-            'integrity',
-            'keepalive',
-            'mode',
-            'priority',
-            'redirect',
-            'referrer',
-            'referrerPolicy',
-            'signal',
-        ].forEach((o) => {
-            if (options && o in options) {
-                throw new Error(`${o} is not supported yet`);
+        if (options) {
+            for (const key of [
+                'browsingTopics',
+                'cache',
+                'credentials',
+                'integrity',
+                'keepalive',
+                'mode',
+                'priority',
+                'redirect',
+                'referrer',
+                'referrerPolicy',
+                'signal',
+            ]) {
+                if (key in options) {
+                    throw new Error(`${key} is not supported yet`);
+                }
             }
-        });
+        }
 
         const timeout = options?.timeout ?? this.settings.timeout;
 
@@ -236,10 +238,10 @@ export class Routing {
             log.info('sending request %s', Request.prettyPrint(request));
 
             // queue segment sending for all of them
-            segments.forEach((s) => {
+            for (const s of segments) {
                 this.nodesColl.segmentStarted(request, s);
                 this.sendSegment(request, s, entryNode, entry);
-            });
+            }
         });
     };
 
@@ -344,7 +346,9 @@ export class Routing {
         log.info('resending request %s', Request.prettyPrint(request));
 
         // send segments sequentially
-        segments.forEach((s) => this.resendSegment(s, request, entryNode, newCacheEntry));
+        for (const s of segments) {
+            this.resendSegment(s, request, entryNode, newCacheEntry);
+        }
     };
 
     private resendSegment = (
@@ -383,7 +387,7 @@ export class Routing {
 
     // handle incoming messages
     private onMessages = (messages: NodeAPI.Message[]) => {
-        messages.forEach(({ body }) => {
+        for (const { body } of messages) {
             const segRes = Segment.fromMessage(body);
             if (Result.isErr(segRes)) {
                 log.info('cannot create segment', segRes.error);
@@ -417,7 +421,7 @@ export class Routing {
                     );
                     break;
             }
-        });
+        }
     };
 
     private completeSegmentsEntry = (entry: SegmentCache.Entry) => {
