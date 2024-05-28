@@ -185,10 +185,10 @@ function reqToTrans(r: ReqPayload): TransportReqPayload {
     if (r.method) {
         t.m = r.method;
     }
-    if (r.timeout) {
+    if (r.timeout != null && r.timeout >= 0) {
         t.t = r.timeout;
     }
-    if (r.hops) {
+    if (r.hops != null && r.hops >= 0) {
         t.n = r.hops;
     }
     if (r.relayPeerId) {
@@ -216,10 +216,10 @@ function respToTrans(r: RespPayload): TransportRespPayload {
             if (r.data) {
                 t.d = r.data;
             }
-            if (r.callDuration) {
+            if (r.callDuration != null && r.callDuration >= 0) {
                 t.f = r.callDuration;
             }
-            if (r.exitAppDuration) {
+            if (r.exitAppDuration != null && r.exitAppDuration >= 0) {
                 t.e = r.exitAppDuration;
             }
             return t;
@@ -269,10 +269,10 @@ function transToReq(t: TransportReqPayload): ReqPayload {
     if (t.m) {
         r.method = t.m;
     }
-    if (t.t) {
+    if (t.t != null && t.t >= 0) {
         r.timeout = t.t;
     }
-    if (t.n) {
+    if (t.n != null && t.n >= 0) {
         r.hops = t.n;
     }
     if (t.r) {
@@ -299,10 +299,10 @@ function transToResp(t: TransportRespPayload): RespPayload {
             if (t.d) {
                 r.data = t.d;
             }
-            if (t.f) {
+            if (t.f != null && t.f >= 0) {
                 r.callDuration = t.f;
             }
-            if (t.e) {
+            if (t.e != null && t.e >= 0) {
                 r.exitAppDuration = t.e;
             }
             return r;
