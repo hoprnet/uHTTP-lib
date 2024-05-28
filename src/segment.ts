@@ -17,12 +17,12 @@ export type Segment = {
  * Slice data into segments.
  */
 export function toSegments(requestId: string, data: Uint8Array): Segment[] {
-    const dataString = Utils.bytesToString(data);
-    const totalCount = Math.ceil(dataString.length / MaxBytes);
+    const base64Str = Utils.bytesToBase64(data);
+    const totalCount = Math.ceil(base64Str.length / MaxBytes);
 
     const segments = [];
     for (let i = 0; i < totalCount; i++) {
-        const body = dataString.slice(i * MaxBytes, (i + 1) * MaxBytes);
+        const body = base64Str.slice(i * MaxBytes, (i + 1) * MaxBytes);
         segments.push({
             requestId,
             nr: i,

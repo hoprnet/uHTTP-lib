@@ -43,12 +43,23 @@ export function isValidURL(url: string) {
     }
 }
 
-export function bytesToString(bytes: Uint8Array): string {
-    return textDecoder.decode(bytes);
-}
-
 export function stringToBytes(str: string): Uint8Array {
     return textEncoder.encode(str);
+}
+
+export function bytesToBase64(bytes: Uint8Array): string {
+    // see https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem
+    const strBytes = Array.from(bytes, (b) => String.fromCodePoint(b));
+    return btoa(strBytes.join(''));
+}
+
+export function base64ToBytes(base64: string): Uint8Array {
+    const binStr = atob(base64);
+    return Uint8Array.from(binStr, (b) => b.codePointAt(0) as number);
+}
+
+export function bytesToString(bytes: Uint8Array): string {
+    return textDecoder.decode(bytes);
 }
 
 export function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
