@@ -53,9 +53,15 @@ export function bytesToBase64(bytes: Uint8Array): string {
     return btoa(strBytes.join(''));
 }
 
-export function base64ToBytes(base64: string): Uint8Array {
-    const binStr = atob(base64);
-    return Uint8Array.from(binStr, (b) => b.codePointAt(0) as number);
+export function base64ToBytes(base64: string): Res.Result<Uint8Array> {
+    try {
+        const binStr = atob(base64);
+        const arr = Uint8Array.from(binStr, (b) => b.codePointAt(0) as number);
+        return Res.ok(arr);
+    } catch (err: any) {
+        // DOMException InvalidCharacterError
+        return Res.err(err.toString());
+    }
 }
 
 export function bytesToString(bytes: Uint8Array): string {

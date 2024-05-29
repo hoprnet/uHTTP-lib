@@ -431,8 +431,12 @@ export class Routing {
         RequestCache.remove(this.requestCache, request.id);
 
         const msgData = SegmentCache.toMessage(entry);
-        const msgBytes = Utils.base64ToBytes(msgData);
+        const resMsgBytes = Utils.base64ToBytes(msgData);
+        if (Result.isErr(resMsgBytes)) {
+            return this.responseError(resMsgBytes.error, reqEntry);
+        }
 
+        const msgBytes = resMsgBytes.res;
         const resUnbox = IntResp.messageToResp({
             respData: msgBytes,
             request,
