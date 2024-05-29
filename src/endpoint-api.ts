@@ -11,14 +11,14 @@ export type Parameters = {
     timeout?: number;
 };
 
-export type Response = {
+export type GenericResponse = {
     headers: Record<string, string>;
     status: number;
     statusText: string;
-    text: string;
+    data?: number[];
 };
 
-export async function fetchUrl(endpoint: string, params?: Parameters): Promise<Response> {
+export async function fetchUrl(endpoint: string, params?: Parameters): Promise<GenericResponse> {
     const url = new URL(endpoint);
     const body = params?.body;
     const method = normalizeMethod(params?.method);
@@ -29,8 +29,12 @@ export async function fetchUrl(endpoint: string, params?: Parameters): Promise<R
             const status = res.status;
             const statusText = res.statusText;
             const headers = convertRespHeaders(res.headers);
-            const text = await res.text();
-            return { status, statusText, text, headers };
+            if (res.body) {
+                const dataBuf: ArrayBuffer = await res.arrayBuffer();
+                const data = Array.from(new Uint8Array(dataBuf));
+                return { status, statusText, headers, data };
+            }
+            return { status, statusText, headers };
         },
     );
 }

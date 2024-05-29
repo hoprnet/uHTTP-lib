@@ -5,7 +5,7 @@ import * as NodesCollector from './routing/nodes-collector';
 import * as Payload from './payload';
 import * as Request from './request';
 import * as RequestCache from './routing/request-cache';
-import * as Response from './response';
+import * as IntResp from './response';
 import * as Result from './result';
 import * as RoutingUtils from './routing/utils';
 import * as Segment from './segment';
@@ -126,28 +126,47 @@ export class Routing {
         }
     };
 
-    public fetch = async (
-        endpoint: URL | string,
-        options?: FetchOptions,
-    ): Promise<Response.Response> => {
+    /**
+     * Check if a route combination of entry and exit node is available.
+     */
+    public isReady = async (timeout?: number): Promise<boolean> => {
+        const tmt = timeout ?? this.settings.timeout;
+        try {
+            await this.nodesColl.requestNodePair(tmt);
+        } catch (err) {
+            log.warn('Error finding node pair during isReady: %s', err);
+            return false;
+        }
+        return true;
+    };
+
+    /**
+     * Create a fetch request similar to fetchAPI.
+     * Throws error on yet unsupported options.
+     *
+     * Returns fetch typical Response object.
+     */
+    public fetch = async (endpoint: URL | string, options?: FetchOptions): Promise<Response> => {
         // throw on everything we are unable to do for now
-        [
-            'browsingTopics',
-            'cache',
-            'credentials',
-            'integrity',
-            'keepalive',
-            'mode',
-            'priority',
-            'redirect',
-            'referrer',
-            'referrerPolicy',
-            'signal',
-        ].forEach((o) => {
-            if (options && o in options) {
-                throw new Error(`${o} is not supported yet`);
+        if (options) {
+            for (const key of [
+                'browsingTopics',
+                'cache',
+                'credentials',
+                'integrity',
+                'keepalive',
+                'mode',
+                'priority',
+                'redirect',
+                'referrer',
+                'referrerPolicy',
+                'signal',
+            ]) {
+                if (key in options) {
+                    throw new Error(`${key} is not supported yet`);
+                }
             }
-        });
+        }
 
         const timeout = options?.timeout ?? this.settings.timeout;
 
@@ -177,7 +196,7 @@ export class Routing {
             reqOpts.respRelayPeerId = resNodes.respRelayPeerId;
         }
         if (options?.headers) {
-            reqOpts.headers = Utils.headersRecord(options.headers);
+            reqOpts.headers = Utils.headersToRecord(options.headers);
         }
         if (options?.body) {
             reqOpts.body = options.body;
@@ -197,14 +216,14 @@ export class Routing {
         const { request, session } = resReq.res;
         const segments = Request.toSegments(request, session);
 
-        // set request expiration timer
-        const timer = setTimeout(() => {
-            log.error('%s expired after %dms timeout', Request.prettyPrint(request), timeout);
-            this.removeRequest(request);
-            throw new Error('Request timed out');
-        }, timeout);
-
         return new Promise((resolve, reject) => {
+            // set request expiration timer
+            const timer = setTimeout(() => {
+                log.error('%s expired after %dms timeout', Request.prettyPrint(request), timeout);
+                this.removeRequest(request);
+                reject('Request timed out');
+            }, timeout);
+
             // keep tabs on request
             const entry = RequestCache.add(this.requestCache, {
                 request,
@@ -219,10 +238,10 @@ export class Routing {
             log.info('sending request %s', Request.prettyPrint(request));
 
             // queue segment sending for all of them
-            segments.forEach((s) => {
+            for (const s of segments) {
                 this.nodesColl.segmentStarted(request, s);
                 this.sendSegment(request, s, entryNode, entry);
-            });
+            }
         });
     };
 
@@ -327,7 +346,9 @@ export class Routing {
         log.info('resending request %s', Request.prettyPrint(request));
 
         // send segments sequentially
-        segments.forEach((s) => this.resendSegment(s, request, entryNode, newCacheEntry));
+        for (const s of segments) {
+            this.resendSegment(s, request, entryNode, newCacheEntry);
+        }
     };
 
     private resendSegment = (
@@ -366,7 +387,7 @@ export class Routing {
 
     // handle incoming messages
     private onMessages = (messages: NodeAPI.Message[]) => {
-        messages.forEach(({ body }) => {
+        for (const { body } of messages) {
             const segRes = Segment.fromMessage(body);
             if (Result.isErr(segRes)) {
                 log.info('cannot create segment', segRes.error);
@@ -400,7 +421,7 @@ export class Routing {
                     );
                     break;
             }
-        });
+        }
     };
 
     private completeSegmentsEntry = (entry: SegmentCache.Entry) => {
@@ -416,7 +437,7 @@ export class Routing {
         }
 
         const msgBytes = resMsgBytes.res;
-        const resUnbox = Response.messageToResp({
+        const resUnbox = IntResp.messageToResp({
             respData: msgBytes,
             request,
             session,
@@ -435,7 +456,7 @@ export class Routing {
         return reqEntry.reject('Unable to process response');
     };
 
-    private responseSuccess = ({ resp }: Response.UnboxResponse, reqEntry: RequestCache.Entry) => {
+    private responseSuccess = ({ resp }: IntResp.UnboxResponse, reqEntry: RequestCache.Entry) => {
         const { request, reject, resolve } = reqEntry;
         const responseTime = Math.round(performance.now() - request.startedAt);
         const stats = this.stats(responseTime, request, resp);
@@ -444,16 +465,11 @@ export class Routing {
 
         switch (resp.type) {
             case Payload.RespType.Resp: {
-                const r: Response.Response = {
-                    status: resp.status,
-                    statusText: resp.statusText,
-                    headers: resp.headers,
-                    text: resp.text,
-                };
-                if (request.measureLatency) {
-                    r.stats = stats;
+                if (resp.data) {
+                    const d = new Uint8Array(resp.data);
+                    return resolve(new Response(d, resp));
                 }
-                return resolve(r);
+                return resolve(new Response(null, resp));
             }
             case Payload.RespType.CounterFail: {
                 const counter = reqEntry.session.updatedTS;

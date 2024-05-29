@@ -28,7 +28,7 @@ export type RespPayload =
           headers: Record<string, string>; // HTTP response headers
           status: number; // HTTP status
           statusText: string; // HTTP status text
-          text: string; // response text
+          data?: number[]; // HTTP data
           callDuration?: number;
           exitAppDuration?: number;
       }
@@ -72,9 +72,9 @@ type TransportRespPayload =
           h: Record<string, string>; // HTTP response header
           s: number; // HTTP status
           a: string; // HTTP status text
-          x: string; // response text
-          f?: number;
-          e?: number;
+          d?: number[]; // HTTP data
+          f?: number; // callDuration
+          e?: number; // exitAppDuration
       }
     | {
           t: RespType.CounterFail;
@@ -96,42 +96,59 @@ type TransportInfoPayload = {
     r?: string[]; // shortIds of relays
 };
 
-export function encodeReq(payload: ReqPayload): Res.Result<string> {
+export function encodeReq(payload: ReqPayload): Res.Result<TransportReqPayload> {
     const t = reqToTrans(payload);
+    return Res.ok(t);
+    // TODO find better compression
+    /*
     try {
         const res = LZString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding request payload: ${ex}`);
     }
+    */
 }
 
-export function decodeReq(payload: string): Res.Result<ReqPayload> {
+export function decodeReq(payload: TransportReqPayload): Res.Result<ReqPayload> {
+    return Res.ok(transToReq(payload));
+
+    // TODO find better compression
+    /*
     try {
         const res = JSON.parse(LZString.decompressFromUTF16(payload));
         return Res.ok(transToReq(res));
     } catch (ex) {
         return Res.err(`Error decoding request payload: ${ex}`);
     }
+    */
 }
 
-export function encodeResp(payload: RespPayload): Res.Result<string> {
+export function encodeResp(payload: RespPayload): Res.Result<TransportRespPayload> {
     const t = respToTrans(payload);
+    return Res.ok(t);
+    // TODO find better compression
+    /*
     try {
         const res = LZString.compressToUTF16(JSON.stringify(t));
         return Res.ok(res);
     } catch (ex) {
         return Res.err(`Error encoding response payload: ${ex}`);
     }
+    */
 }
 
-export function decodeResp(payload: string): Res.Result<RespPayload> {
+export function decodeResp(payload: TransportRespPayload): Res.Result<RespPayload> {
+    return Res.ok(transToResp(payload));
+    // TODO find better compression
+    /*
     try {
         const res = JSON.parse(LZString.decompressFromUTF16(payload));
         return Res.ok(transToResp(res));
     } catch (ex) {
         return Res.err(`Error decoding response payload: ${ex}`);
     }
+    */
 }
 
 export function encodeInfo(payload: InfoPayload): Res.Result<string> {
@@ -168,10 +185,10 @@ function reqToTrans(r: ReqPayload): TransportReqPayload {
     if (r.method) {
         t.m = r.method;
     }
-    if (r.timeout) {
+    if (r.timeout != null && r.timeout >= 0) {
         t.t = r.timeout;
     }
-    if (r.hops) {
+    if (r.hops != null && r.hops >= 0) {
         t.n = r.hops;
     }
     if (r.relayPeerId) {
@@ -194,13 +211,15 @@ function respToTrans(r: RespPayload): TransportRespPayload {
                 h: r.headers,
                 s: r.status,
                 a: r.statusText,
-                x: r.text,
             };
 
-            if (r.callDuration) {
+            if (r.data) {
+                t.d = r.data;
+            }
+            if (r.callDuration != null && r.callDuration >= 0) {
                 t.f = r.callDuration;
             }
-            if (r.exitAppDuration) {
+            if (r.exitAppDuration != null && r.exitAppDuration >= 0) {
                 t.e = r.exitAppDuration;
             }
             return t;
@@ -237,32 +256,57 @@ function infoToTrans(r: InfoPayload): TransportInfoPayload {
 }
 
 function transToReq(t: TransportReqPayload): ReqPayload {
-    return {
+    const r: ReqPayload = {
         clientId: t.c,
         endpoint: t.e,
-        body: t.b,
-        headers: t.h,
-        method: t.m,
-        timeout: t.t,
-        hops: t.n,
-        relayPeerId: t.r,
-        withDuration: t.w,
-        chainId: t.i,
     };
+    if (t.b) {
+        r.body = t.b;
+    }
+    if (t.h) {
+        r.headers = t.h;
+    }
+    if (t.m) {
+        r.method = t.m;
+    }
+    if (t.t != null && t.t >= 0) {
+        r.timeout = t.t;
+    }
+    if (t.n != null && t.n >= 0) {
+        r.hops = t.n;
+    }
+    if (t.r) {
+        r.relayPeerId = t.r;
+    }
+    if (t.w) {
+        r.withDuration = t.w;
+    }
+    if (t.i) {
+        r.chainId = t.i;
+    }
+    return r;
 }
 
 function transToResp(t: TransportRespPayload): RespPayload {
     switch (t.t) {
-        case RespType.Resp:
-            return {
+        case RespType.Resp: {
+            const r: RespPayload = {
                 type: RespType.Resp,
                 headers: t.h,
                 status: t.s,
                 statusText: t.a,
-                text: t.x,
-                callDuration: t.f,
-                exitAppDuration: t.e,
             };
+            if (t.d) {
+                r.data = t.d;
+            }
+            if (t.f != null && t.f >= 0) {
+                r.callDuration = t.f;
+            }
+            if (t.e != null && t.e >= 0) {
+                r.exitAppDuration = t.e;
+            }
+            return r;
+        }
         case RespType.CounterFail:
             return {
                 type: RespType.CounterFail,

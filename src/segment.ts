@@ -1,4 +1,5 @@
 import * as Res from './result';
+import * as Utils from './utils';
 
 // Maximum bytes we should be sending within the HOPR network.
 const MaxBytes = 400;
@@ -12,21 +13,16 @@ export type Segment = {
     body: string;
 };
 
-function bytesToBase64(bytes: Uint8Array) {
-    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
-    return btoa(binString);
-}
-
 /**
  * Slice data into segments.
  */
 export function toSegments(requestId: string, data: Uint8Array): Segment[] {
-    const dataString = bytesToBase64(data);
-    const totalCount = Math.ceil(dataString.length / MaxBytes);
+    const base64Str = Utils.bytesToBase64(data);
+    const totalCount = Math.ceil(base64Str.length / MaxBytes);
 
     const segments = [];
     for (let i = 0; i < totalCount; i++) {
-        const body = dataString.slice(i * MaxBytes, (i + 1) * MaxBytes);
+        const body = base64Str.slice(i * MaxBytes, (i + 1) * MaxBytes);
         segments.push({
             requestId,
             nr: i,
@@ -80,6 +76,6 @@ export function toMessage({ requestId, nr, totalCount, body }: Segment) {
 /**
  * Pretty print segment in human readable form.
  */
-export function prettyPrint({ requestId, nr, totalCount }: Segment) {
-    return `segment[rId: ${requestId}, nr: ${nr}, total: ${totalCount}]`;
+export function prettyPrint({ requestId, nr, totalCount, body }: Segment) {
+    return `segment[rId: ${requestId}, ${nr + 1}/${totalCount}, size: ${body.length}]`;
 }

@@ -43,27 +43,29 @@ export function isValidURL(url: string) {
     }
 }
 
-export function bytesToBase64(bytes: Uint8Array) {
-    const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join('');
-    return btoa(binString);
+export function stringToBytes(str: string): Uint8Array {
+    return textEncoder.encode(str);
 }
 
-export function bytesToString(arr: Uint8Array) {
-    return textDecoder.decode(arr);
+export function bytesToBase64(bytes: Uint8Array): string {
+    // see https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem
+    const strBytes = Array.from(bytes, (b) => String.fromCodePoint(b));
+    return btoa(strBytes.join(''));
 }
 
 export function base64ToBytes(base64: string): Res.Result<Uint8Array> {
     try {
-        const binString = atob(base64);
-        return Res.ok(Uint8Array.from(binString, (m) => m.codePointAt(0) as number));
+        const binStr = atob(base64);
+        const arr = Uint8Array.from(binStr, (b) => b.codePointAt(0) as number);
+        return Res.ok(arr);
     } catch (err: any) {
         // DOMException InvalidCharacterError
         return Res.err(err.toString());
     }
 }
 
-export function stringToBytes(str: string): Uint8Array {
-    return textEncoder.encode(str);
+export function bytesToString(bytes: Uint8Array): string {
+    return textDecoder.decode(bytes);
 }
 
 export function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
@@ -73,11 +75,10 @@ export function concatBytes(left: Uint8Array, right: Uint8Array): Uint8Array {
     return res;
 }
 
-export function headersRecord(headers: Headers | Record<string, string>) {
-    if (!headers) {
-        return undefined;
-    }
-
+/**
+ * Convert **Headers** to **Record<string, string> for easier usage.
+ */
+export function headersToRecord(headers: Headers | Record<string, string>): Record<string, string> {
     return Object.entries(headers).reduce<Record<string, string>>((acc, [k, v]) => {
         if (v) {
             if (Array.isArray(v)) {

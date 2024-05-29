@@ -1,13 +1,12 @@
 import * as Crypto from '@hoprnet/phttp-crypto';
 
 import * as Request from '../request';
-import * as Response from '../response';
 
 export type Cache = Map<string, Entry>; // id -> Request
 
 export type Entry = {
     request: Request.Request;
-    resolve: (res: Response.Response) => void;
+    resolve: (res: Response) => void;
     reject: (error: string) => void;
     session: Crypto.Session;
     timer: ReturnType<typeof setTimeout>;
@@ -30,7 +29,7 @@ export function add(
         timer,
     }: {
         request: Request.Request;
-        resolve: (res: Response.Response) => void;
+        resolve: (res: Response) => void;
         reject: (error: string) => void;
         session: Crypto.Session;
         timer: ReturnType<typeof setTimeout>;

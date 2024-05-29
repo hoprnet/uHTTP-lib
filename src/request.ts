@@ -81,13 +81,13 @@ export function create({
         chainId,
         timeout,
     };
-    // TODO
-    // const resEncode = Payload.encodeReq(payload);
-    // if (Res.isErr(resEncode)) {
-    // return resEncode;
-    // }
 
-    const json = JSON.stringify(payload);
+    const resEncode = Payload.encodeReq(payload);
+    if (Res.isErr(resEncode)) {
+        return resEncode;
+    }
+
+    const json = JSON.stringify(resEncode.res);
     const data = Utils.stringToBytes(json);
     const resBox = Crypto.boxRequest({
         message: data,
@@ -146,7 +146,12 @@ export function messageToReq({
     }
     const msg = Utils.bytesToString(resUnbox.session.request);
     try {
-        const reqPayload = JSON.parse(msg);
+        const transPayload = JSON.parse(msg);
+        const resReqPld = Payload.decodeReq(transPayload);
+        if (Res.isErr(resReqPld)) {
+            return resReqPld;
+        }
+        const reqPayload = resReqPld.res;
         return Res.ok({
             reqPayload,
             session: resUnbox.session,
