@@ -8,7 +8,7 @@ import * as NodePair from './node-pair';
 
 import type { EntryNode } from '../entry-node';
 
-const ExitNodesCompatVersions = ['2.'];
+const ExitNodesCompatVersions = ['3.'];
 
 export type NodeSelection = {
     match: NodeMatch.NodeMatch;

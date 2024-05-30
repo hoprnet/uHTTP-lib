@@ -1,5 +1,11 @@
 # @hoprnet/phttp-lib
 
+## 3.0.1
+
+### Patch Changes
+
+-   Fix compatible exit app versions'
+
 ## 3.0.0
 
 ### Major Changes
