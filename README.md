@@ -1,5 +1,7 @@
-# pHTTP-lib
+# u(nlinked)HTTP-lib
 
-p(rivate)HTTP library
+Provides common functionality shared across uHTTP applications and modules.
 
-Provides common functionality shared across p(rivate)HTTP applications and modules.
+## Using uHTTP network
+
+If you want to send traffic through uHTTP network, take a look at [Routing](ROUTING.md).

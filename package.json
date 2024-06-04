@@ -1,5 +1,5 @@
 {
-    "name": "@hoprnet/phttp-lib",
+    "name": "@hoprnet/uhttp-lib",
     "version": "3.0.1",
     "description": "privateHTTP library",
     "author": "HOPR Association",
@@ -10,7 +10,7 @@
     ],
     "keywords": [
         "hopr",
-        "pHTTP"
+        "uHTTP"
     ],
     "engines": {
         "node": ">=18.0.0"

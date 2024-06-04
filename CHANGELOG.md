@@ -1,4 +1,4 @@
-# @hoprnet/phttp-lib
+# @hoprnet/uhttp-lib
 
 ## 3.0.1
 
