@@ -3,9 +3,12 @@ on:
     workflow_dispatch:
         inputs:
             tag:
-                type: string
+                type: choice
+                options:
+                    - latest
+                    - beta
                 required: true
-                default: latest
+                default: beta
 
 jobs:
     publish:
