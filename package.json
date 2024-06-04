@@ -1,7 +1,7 @@
 {
     "name": "@hoprnet/uhttp-lib",
     "version": "3.0.2",
-    "description": "privateHTTP library",
+    "description": "u(nlinked)HTTP library",
     "author": "HOPR Association",
     "main": "./build/index.js",
     "types": "./build/index.d.ts",

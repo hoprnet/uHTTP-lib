@@ -1,5 +1,5 @@
 {
-  description = "p(rivate)HTTP library dev shell";
+  description = "u(nlinked)HTTP library dev shell";
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
