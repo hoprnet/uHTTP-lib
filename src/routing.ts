@@ -1,4 +1,3 @@
-import * as DPapi from './dp-api';
 import * as EntryNode from './entry-node';
 import * as NodeAPI from './node-api';
 import * as NodesCollector from './routing/nodes-collector';
