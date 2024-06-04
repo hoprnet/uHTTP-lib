@@ -26,7 +26,6 @@ export type Nodes = {
     entryNodes: EntryNode[];
     exitNodes: ExitNode[];
     matchedAt: string;
-    versions: Versions;
 };
 
 export type QuotaParams = {
@@ -36,10 +35,6 @@ export type QuotaParams = {
     lastSegmentLength?: number;
     chainId?: string;
     type: 'request' | 'response';
-};
-
-export type Versions = {
-    phttpLib: string;
 };
 
 export function getNodes(ops: ClientOps, amount: number): Promise<Nodes> {
