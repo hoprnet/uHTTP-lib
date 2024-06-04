@@ -12,6 +12,7 @@ If you want to send traffic through uHTTP network, take a look at [Routing](ROUT
 
 -   staging can be deployed from main
 -   run `yarn changeset version` to create the current changelog
+-   run `yarn build` to update version info
 -   commit everything, create a matching tag and push to main
 -   run publish action with `beta`(default) tag
 
