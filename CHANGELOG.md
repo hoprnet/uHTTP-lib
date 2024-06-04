@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.0.2
+
+### Patch Changes
+
+-   renamed to u(unlinked)HTTP
+
 ## 3.0.1
 
 ### Patch Changes
