@@ -12,8 +12,6 @@ import * as NodePair from './node-pair';
 import * as NodeSel from './node-selector';
 import * as RoutingUtils from './utils';
 
-export type VersionListener = (versions: DPapi.Versions) => void;
-
 const log = RoutingUtils.logger(['sdk', 'nodes-collector']);
 
 const RoutesFetchInterval = 1e3 * 60 * 10; // 10 min
@@ -27,7 +25,6 @@ export class NodesCollector {
         private readonly clientId: string,
         private readonly applicationTag: number,
         private readonly messageListener: MessageListener.MessageListener,
-        private readonly versionListener: VersionListener,
         private readonly hops: number,
         private readonly forceManualRelaying: boolean,
     ) {
@@ -208,7 +205,6 @@ export class NodesCollector {
             lookupExitNodes.size,
             new Date(nodes.matchedAt),
         );
-        this.versionListener(nodes.versions);
     };
 
     private scheduleFetchRoutes = () => {

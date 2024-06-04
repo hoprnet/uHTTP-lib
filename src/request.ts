@@ -1,4 +1,4 @@
-import * as Crypto from '@hoprnet/phttp-crypto';
+import * as Crypto from '@hoprnet/uhttp-crypto';
 
 import * as Res from './result';
 import * as Payload from './payload';

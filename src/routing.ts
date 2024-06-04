@@ -14,7 +14,7 @@ import * as Utils from './utils';
 import Version from './version';
 
 /**
- * pHTTP settings configure global behaviour of routing lib.
+ * uHTTP settings configure global behaviour of routing lib.
  * See **defaultSettings** for defaults.
  *
  * @param discoveryPlatformEndpoint discovery platform API endpoint
@@ -35,7 +35,7 @@ export type Settings = {
     readonly measureLatency?: boolean;
 };
 
-const log = RoutingUtils.logger(['phttp-lib']);
+const log = RoutingUtils.logger(['uhttp-lib']);
 
 // message tag - more like port since we tag all our messages the same
 // 0xffff reserved for Availability Monitor
@@ -108,11 +108,10 @@ export class Routing {
             this.clientId,
             ApplicationTag,
             this.onMessages,
-            this.onVersions,
             this.hops,
             this.settings.forceManualRelaying,
         );
-        log.info('pHTTP routing[v%s] started', Version);
+        log.info('uHTTP routing[v%s] started', Version);
     }
 
     /**
@@ -512,32 +511,6 @@ export class Routing {
             return 0;
         }
         return 1;
-    };
-
-    private onVersions = (_versions: DPapi.Versions) => {
-        // TODO provide versioning info from backend
-        /*
-        const vLib = versions.phttpLib;
-        const cmp = Utils.versionCompare(vLib, Version);
-        if (Result.isOk(cmp)) {
-            switch (cmp.res) {
-                case Utils.VrsnCmp.Identical:
-                    log.verbose('pHTTP-lib[v%s] is up to date', Version);
-                    break;
-                case Utils.VrsnCmp.PatchMismatch:
-                    log.info('pHTTP-lib[v%s] can be updated to v%s.', Version, vLib);
-                    break;
-                case Utils.VrsnCmp.MinorMismatch:
-                    log.warn('pHTTP-lib[v%s] needs to update to v%s.', Version, vLib);
-                    break;
-                case Utils.VrsnCmp.MajorMismatch:
-                    log.error('pHTTP-lib[v%s] must be updated to v%s!', Version, vLib);
-                    break;
-            }
-        } else {
-            log.error('error comparing versions: %s', cmp.error);
-        }
-        */
     };
 
     private stats = (responseTime: number, request: Request.Request, resp: Payload.RespPayload) => {

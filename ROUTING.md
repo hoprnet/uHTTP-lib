@@ -1,7 +1,7 @@
 # Routing through uHTTP
 
 ```
-import { Routing } from '@hoprnet/phttp-lib';
+import { Routing } from '@hoprnet/uhttp-lib';
 
 const clientId = 'xxxx'; // get from [RPCh](https://access.rpch.net)
 
