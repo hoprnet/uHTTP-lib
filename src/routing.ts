@@ -73,7 +73,7 @@ export type FetchOptions = {
 };
 
 /**
- * Send traffic through the RPCh network
+ * Send traffic through uHTTP network
  */
 export class Routing {
     private readonly requestCache: RequestCache.Cache;

@@ -240,7 +240,7 @@ export class NodesCollector {
             'Authentication failed',
             '-',
             'Client ID is not valid.',
-            'Visit https://degen.rpch.net to get a valid Client ID!',
+            'Visit https://access.rpch.net to get a valid Client ID!',
             '***',
         ].join(' ');
         const errDeco = Array.from({ length: errMessage.length }, () => '*').join('');
@@ -256,7 +256,7 @@ export class NodesCollector {
         const errMessage = [
             '***',
             'No node pairs available.',
-            'Contact support at https://degen.rpch.net to report this problem!',
+            'Contact support at https://access.rpch.net to report this problem!',
             '***',
         ].join(' ');
         const errDeco = Array.from({ length: errMessage.length }, () => '*').join('');
