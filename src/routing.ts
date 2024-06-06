@@ -13,12 +13,12 @@ import * as Utils from './utils';
 import Version from './version';
 
 /**
- * uHTTP settings configure global behaviour of routing lib.
+ * uHTTP settings configure global behaviour of routing client.
  * See **defaultSettings** for defaults.
  *
  * @param discoveryPlatformEndpoint discovery platform API endpoint
  * @param timeout - timeout for receiving responses
- * @param forceZeroHop - disable routing protection
+ * @param forceZeroHop - force no additional hop through the network
  * @param debugScope - programatically set debug scope for SDK
  * @param logLevel - only print log statements that match at least the desired level: verbose < info < warn < error
  * @param forceManualRelaying - determine relay nodes for requests/responses and enforce them for one hop messages, can not be used with zero hop
@@ -74,7 +74,7 @@ export type FetchOptions = {
 /**
  * Send traffic through uHTTP network
  */
-export class Routing {
+export class Client {
     private readonly requestCache: RequestCache.Cache;
     private readonly segmentCache: SegmentCache.Cache;
     private readonly redoRequests: Set<string> = new Set();
@@ -83,7 +83,7 @@ export class Routing {
     private readonly hops?: number;
 
     /**
-     * Construct a routing lib instance providing a fetch shim when ready.
+     * Construct a routing client instance providing a fetch shim when ready.
      * @param cliendId your unique string used to identify how many requests your client pushes through the network
      * @param settings, see **Settings**
      **/
@@ -110,7 +110,7 @@ export class Routing {
             this.hops,
             this.settings.forceManualRelaying,
         );
-        log.info('uHTTP routing[v%s] started', Version);
+        log.info('uHTTP client[v%s] started', Version);
     }
 
     /**
