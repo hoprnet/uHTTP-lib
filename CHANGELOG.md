@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.1.0
+
+### Minor Changes
+
+-   6ef3ccf: Allow request creation adjustments without compromising fetch API
+
 ## 3.0.3
 
 ### Patch Changes
