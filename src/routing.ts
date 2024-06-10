@@ -34,6 +34,14 @@ export type Settings = {
     readonly measureLatency?: boolean;
 };
 
+/**
+ * Use this to intercept the request manually before it gets encrypted and packaged to be sent to the network.
+ * Can be used for logging or mangling of the final request.
+ */
+export type OnRequestCreationHandler = (
+    requestOptions: Request.CreateOptions,
+) => Request.CreateOptions;
+
 const log = RoutingUtils.logger(['uhttp-lib']);
 
 // message tag - more like port since we tag all our messages the same
@@ -81,6 +89,7 @@ export class Client {
     private readonly nodesColl: NodesCollector.NodesCollector;
     private readonly settings;
     private readonly hops?: number;
+    public onRequestCreationHandler: OnRequestCreationHandler = (r) => r;
 
     /**
      * Construct a routing client instance providing a fetch shim when ready.
@@ -189,6 +198,7 @@ export class Client {
             measureLatency: this.settings.measureLatency,
             timeout,
         };
+
         if (this.settings.forceManualRelaying) {
             reqOpts.reqRelayPeerId = resNodes.reqRelayPeerId;
             reqOpts.respRelayPeerId = resNodes.respRelayPeerId;
@@ -203,8 +213,11 @@ export class Client {
             reqOpts.method = options.method;
         }
 
+        // adjust request externally
+        const adjustedReqOpts = this.onRequestCreationHandler(reqOpts);
+
         // create request
-        const resReq = Request.create(reqOpts);
+        const resReq = Request.create(adjustedReqOpts);
         if (Result.isErr(resReq)) {
             log.error('error creating request', resReq.error);
             throw new Error('Unable to create request object');
