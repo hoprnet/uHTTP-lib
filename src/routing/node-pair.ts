@@ -47,7 +47,7 @@ export function create(
 ): NodePair {
     const entryData = EntryData.create();
     const shortId = Utils.shortPeerId(entryNode.id);
-    const log = RoutingUtils.logger(['sdk', `nodepair${shortId}(${entryNode.apiEndpoint})`]);
+    const log = RoutingUtils.logger(['uhttp-lib', `nodepair${shortId}(${entryNode.apiEndpoint})`]);
     const exitNodesMap = new Map(exitNodes.map((n) => [n.id, n]));
     const exitDatasMap = new Map(exitNodes.map((n) => [n.id, ExitData.create()]));
     return {
