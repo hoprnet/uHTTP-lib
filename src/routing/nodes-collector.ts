@@ -4,7 +4,6 @@ import * as ExitNode from '../exit-node';
 import * as MessageListener from './node-pair';
 import * as NodeMatch from './node-match';
 import * as Request from '../request';
-import * as Res from '../result';
 import * as Segment from '../segment';
 import * as Utils from '../utils';
 
@@ -48,13 +47,15 @@ export class NodesCollector {
                 const now = performance.now();
                 const elapsed = now - start;
                 const res = NodeSel.routePair(this.nodePairs, this.forceManualRelaying);
-                if (Res.isOk(res)) {
-                    log.verbose('found route pair: %s', NodeSel.prettyPrint(res.res));
-                    return resolve(res.res.match);
+
+                if (NodeSel.isSuccess(res)) {
+                    log.verbose('found route pair: %s', NodeSel.prettyPrint(res));
+                    return resolve(res.match);
                 }
+
                 if (elapsed > timeout) {
-                    log.error('timeout after %d waiting for node pair: %s', elapsed, res.error);
-                    return reject(`timeout after ${elapsed} ms`);
+                    log.error('timeout after %d waiting for node pair: %o', elapsed, res);
+                    return reject(`Timeout after ${elapsed} ms: ${NodeSel.prettyPrint(res)}`);
                 }
                 setTimeout(check, 100);
             };
@@ -67,9 +68,9 @@ export class NodesCollector {
      */
     public fallbackNodePair = (exclude: EntryNode.EntryNode): NodeMatch.NodeMatch | undefined => {
         const res = NodeSel.fallbackRoutePair(this.nodePairs, exclude, this.forceManualRelaying);
-        if (Res.isOk(res)) {
-            log.verbose('found fallback route pair: %s', NodeSel.prettyPrint(res.res));
-            return res.res.match;
+        if (NodeSel.isSuccess(res)) {
+            log.verbose('found fallback route pair: %s', NodeSel.prettyPrint(res));
+            return res.match;
         }
     };
 
