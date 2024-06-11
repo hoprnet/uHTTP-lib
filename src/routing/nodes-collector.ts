@@ -54,7 +54,11 @@ export class NodesCollector {
                 }
 
                 if (elapsed > timeout) {
-                    log.error('timeout after %d waiting for node pair: %o', elapsed, res);
+                    log.error(
+                        'timeout after %d waiting for node pair: %s',
+                        elapsed,
+                        NodeSel.prettyPrint(res),
+                    );
                     return reject(`Timeout after ${elapsed} ms: ${NodeSel.prettyPrint(res)}`);
                 }
                 setTimeout(check, 100);
