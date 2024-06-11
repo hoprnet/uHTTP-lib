@@ -1,4 +1,3 @@
-import * as Res from '../result';
 import { shortPeerId, randomEl } from '../utils';
 
 // import * as EntryData from './entry-data';
@@ -10,12 +9,16 @@ import type { EntryNode } from '../entry-node';
 
 const ExitNodesCompatVersions = ['3.'];
 
-export type NodeSelection = {
-    match: NodeMatch.NodeMatch;
-    via: string;
-};
+export enum Result {
+    Success,
+    NoNodes,
+    NoNodesMatchingVersion,
+}
 
-export type NodesSorting = Map<string, Set<string>>;
+export type Selection =
+    | { result: Result.Success; match: NodeMatch.NodeMatch; via: string }
+    | { result: Result.NoNodesMatchingVersion }
+    | { result: Result.NoNodes };
 
 // type EntryPerf = EntryData.Perf & { entryNode: EntryNode };
 type ExitPerf = ExitData.Perf & NodeMatch.NodeMatch;
@@ -27,7 +30,7 @@ type ExitPerf = ExitData.Perf & NodeMatch.NodeMatch;
 export function routePair(
     nodePairs: Map<string, NodePair.NodePair>,
     forceManualRelaying: boolean,
-): Res.Result<NodeSelection> {
+): Selection {
     const routePerfs = createRoutePerfs(nodePairs, forceManualRelaying);
     return match(nodePairs, routePerfs);
 }
@@ -41,34 +44,39 @@ export function fallbackRoutePair(
     nodePairs: Map<string, NodePair.NodePair>,
     exclude: EntryNode,
     forceManualRelaying: boolean,
-): Res.Result<NodeSelection> {
+): Selection {
     const routePerfs = createRoutePerfs(nodePairs, forceManualRelaying);
     const filtered = routePerfs.filter(({ entryNode }) => entryNode.id !== exclude.id);
     return match(nodePairs, filtered);
 }
 
-export function prettyPrint(sel: NodeSelection) {
-    const { entryNode, exitNode, reqRelayPeerId, respRelayPeerId } = sel.match;
-    const eId = shortPeerId(entryNode.id);
-    const xId = shortPeerId(exitNode.id);
-    const path = [`e${eId}`];
-    if (reqRelayPeerId) {
-        path.push(`r${shortPeerId(reqRelayPeerId)}`);
+export function prettyPrint(sel: Selection) {
+    switch (sel.result) {
+        case Result.NoNodes:
+            return 'no nodes';
+        case Result.NoNodesMatchingVersion:
+            return 'no nodes matching required version';
+        case Result.Success: {
+            const { entryNode, exitNode, reqRelayPeerId, respRelayPeerId } = sel.match;
+            const eId = shortPeerId(entryNode.id);
+            const xId = shortPeerId(exitNode.id);
+            const path = [`e${eId}`];
+            if (reqRelayPeerId) {
+                path.push(`r${shortPeerId(reqRelayPeerId)}`);
+            }
+            path.push(`x${xId}`);
+            if (respRelayPeerId) {
+                path.push(`r${shortPeerId(respRelayPeerId)}`);
+            }
+            return `${path.join('>')} (via ${sel.via})`;
+        }
     }
-    path.push(`x${xId}`);
-    if (respRelayPeerId) {
-        path.push(`r${shortPeerId(respRelayPeerId)}`);
-    }
-    return `${path.join('>')} (via ${sel.via})`;
 }
 
-function match(
-    nodePairs: Map<string, NodePair.NodePair>,
-    routePerfs: ExitPerf[],
-): Res.Result<NodeSelection> {
+function match(nodePairs: Map<string, NodePair.NodePair>, routePerfs: ExitPerf[]): Selection {
     // special case no nodes
     if (routePerfs.length === 0) {
-        return Res.err('no nodes');
+        return { result: Result.NoNodes };
     }
     // special case only one route
     if (routePerfs.length === 1) {
@@ -81,7 +89,7 @@ function match(
         return success(xVersionMatches[0], 'only (assumed) version match');
     }
     if (xVersionMatches.length === 0) {
-        return Res.err('no nodes matching required version');
+        return { result: Result.NoNodesMatchingVersion };
     }
 
     ////
@@ -154,11 +162,12 @@ function match(
 function success(
     { entryNode, exitNode, counterOffset, reqRelayPeerId, respRelayPeerId }: ExitPerf,
     via: string,
-): Res.Result<NodeSelection> {
-    return Res.ok({
+): Selection {
+    return {
+        result: Result.Success,
         match: { entryNode, exitNode, counterOffset, reqRelayPeerId, respRelayPeerId },
         via,
-    });
+    };
 }
 
 function createRoutePerfs(nodePairs: Map<string, NodePair.NodePair>, forceManualRelaying: boolean) {
@@ -218,6 +227,12 @@ function versionMatches(routePerfs: ExitPerf[]): ExitPerf[] {
         // do not exclude not yet determined ones
         return true;
     });
+}
+
+export function isSuccess(
+    sel: Selection,
+): sel is { result: Result.Success; match: NodeMatch.NodeMatch; via: string } {
+    return sel.result === Result.Success;
 }
 
 // function noInfoFails(routePerfs: ExitPerf[]): ExitPerf[] {
