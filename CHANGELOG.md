@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.1.1
+
+### Patch Changes
+
+-   5fd1b9e: Expose no matching version exit nodes error
+
 ## 3.1.0
 
 ### Minor Changes
