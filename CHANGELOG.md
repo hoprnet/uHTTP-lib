@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.1.2
+
+### Patch Changes
+
+-   Fix deployment docs
+
 ## 3.1.1
 
 ### Patch Changes
