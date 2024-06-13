@@ -5,8 +5,7 @@ This has some limitations, though.
 
 Compared to the [original](https://developer.mozilla.org/en-US/docs/Web/API/fetch) it has the following limitations:
 
-- can only handle sting or stringifyable input
-+ can only handle string or stringifyable input
+- can only handle string or stringifyable input
 - can only handle these request options: `body`, `headers` and `method`
 - has one additional option paramater called `timeout` [in ms], which can cover timout based `signal` functionality.
 
