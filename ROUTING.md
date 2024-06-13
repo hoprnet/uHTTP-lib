@@ -1,6 +1,6 @@
 # Routing through uHTTP
 
-We offer a fetch equivalent API endpoint which you can use as a drop in replacement for fetch.
+We offer a fetch equivalent API endpoint which you can use as a drop-in replacement for fetch.
 This has some limitations though.
 
 Compared to the [original](https://developer.mozilla.org/en-US/docs/Web/API/fetch) it has the following limitations:
