@@ -1,6 +1,5 @@
 import { shortPeerId, randomEl, randomWeightedIdx } from '../utils';
 
-// import * as EntryData from './entry-data';
 import * as ExitData from './exit-data';
 import * as NodeMatch from './node-match';
 import * as NodePair from './node-pair';

@@ -25,10 +25,10 @@ export function randomWeightedIdx(weights: number[]): number {
     const total = weights.reduce((acc, w) => acc + w, 0);
     const rand = Math.random() * total;
 
-    let cumWeigth = 0;
+    let cumWeight = 0;
     for (let i = 0; i < weights.length; i++) {
-        cumWeigth += weights[i];
-        if (cumWeigth > rand) {
+        cumWeight += weights[i];
+        if (cumWeight > rand) {
             return i;
         }
     }
