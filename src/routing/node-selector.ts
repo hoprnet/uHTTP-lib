@@ -1,6 +1,5 @@
-import { shortPeerId, randomEl } from '../utils';
+import { shortPeerId, randomEl, randomWeightedIdx } from '../utils';
 
-// import * as EntryData from './entry-data';
 import * as ExitData from './exit-data';
 import * as NodeMatch from './node-match';
 import * as NodePair from './node-pair';
@@ -86,77 +85,38 @@ function match(nodePairs: Map<string, NodePair.NodePair>, routePerfs: ExitPerf[]
     // special case version mismatches
     const xVersionMatches = versionMatches(routePerfs);
     if (xVersionMatches.length === 1) {
-        return success(xVersionMatches[0], 'only (assumed) version match');
+        return success(xVersionMatches[0], 'only version match');
     }
     if (xVersionMatches.length === 0) {
         return { result: Result.NoNodesMatchingVersion };
     }
 
     ////
-    // just choose a random route for better privacy
-    return success(randomEl(xVersionMatches), 'random selection');
-
-    ////
-    // TODO mix random and performances for a more sophisticated selection
-    ////
-    // 1. compare exit node performances
-    //   const xNoInfoFails = noInfoFails(xVersionMatches);
-    //   if (xNoInfoFails.length === 1) {
-    //       return success(xNoInfoFails[0], 'only info req success');
-    //   }
-
-    //   ////
-    //   // 1b.
-    //   const xLeastErrs = leastReqErrors(xNoInfoFails);
-    //   if (xLeastErrs.length === 1) {
-    //       return success(xLeastErrs[0], 'least request errors');
-    //   }
-    //   const xLeastOngoing = leastReqOngoing(xLeastErrs);
-    //   if (xLeastOngoing.length === 1) {
-    //       return success(xLeastOngoing[0], 'least ongoing requests');
-    //   }
-    //   const xBestLats = bestReqLatencies(xLeastOngoing);
-    //   if (xBestLats.length > 0) {
-    //       return success(xBestLats[0], 'best request latency');
-    //   }
-    //   const xBestInfoLats = bestInfoLatencies(xLeastOngoing);
-    //   if (xBestInfoLats.length > 0) {
-    //       return success(xBestInfoLats[0], 'best info req latency');
-    //   }
-
-    //   const entryPerfs = createEntryPerfs(nodePairs, xLeastOngoing);
-
-    //   ////
-    //   // 2. compare entry node performances
-    //   const eLeastErrs = leastSegErrors(entryPerfs);
-    //   if (eLeastErrs.length === 1) {
-    //       return eSuccess(eLeastErrs[0], xLeastOngoing, 'least segment errors');
-    //   }
-    //   const eLeastOngoing = leastSegOngoing(eLeastErrs);
-    //   if (eLeastOngoing.length === 1) {
-    //       return eSuccess(eLeastOngoing[0], xLeastOngoing, 'least ongoing segments');
-    //   }
-    //   const eBestLats = bestSegLatencies(eLeastOngoing);
-    //   if (eBestLats.length > 0) {
-    //       return eSuccess(eBestLats[0], xLeastOngoing, 'best segment latency');
-    //   }
-    //   const eLeastMsgsErrs = leastMsgsErrors(eLeastOngoing);
-    //   if (eLeastMsgsErrs.length === 1) {
-    //       return eSuccess(eLeastMsgsErrs[0], xLeastOngoing, 'least message retrieval errors');
-    //   }
-    //   const eBestMsgsLats = bestMsgsLatencies(eLeastMsgsErrs);
-    //   if (eBestMsgsLats.length > 0) {
-    //       return eSuccess(eBestMsgsLats[0], xLeastOngoing, 'best message retrieval latency');
-    //   }
-
-    //   ////
-    //   // 3. compare ping speed
-    //   const eQuickestPing = quickestPing(eLeastMsgsErrs);
-    //   if (eQuickestPing.length > 0) {
-    //       return eSuccess(eQuickestPing[0], xLeastOngoing, 'quickest version ping');
-    //   }
-
-    // return { success: false, error: 'insufficient data' };
+    // weight routes depending on failures and performance
+    const routes = xVersionMatches;
+    // 100 vs 0 points for info success vs fail
+    const wNoInfoFails = routes.map(({ infoFail }) => (infoFail ? 0 : 100));
+    // 100 points for virgin idle or 1 ongoing requests
+    // 1 - 100 points for idle with only successes depending on successes
+    // diff between successes and triple weighted failures added to single weighted ongoing
+    const wRequestStats = routes.map(({ failures, ongoing, successes, total }) => {
+        if (total === 0) {
+            if (ongoing === 0) {
+                return 100;
+            }
+            return 100 / ongoing;
+        }
+        if (failures === 0 && ongoing === 0) {
+            return 100 - 99 / successes;
+        }
+        if (successes > failures * 3 + ongoing) {
+            return successes - (failures * 3 + ongoing);
+        }
+        return 1;
+    });
+    const weights = wNoInfoFails.map((v, idx) => v + wRequestStats[idx]);
+    const idx = randomWeightedIdx(weights);
+    return success(routes[idx], `weighted random over performance[score ${weights[idx]}]`);
 }
 
 function success(
@@ -234,114 +194,3 @@ export function isSuccess(
 ): sel is { result: Result.Success; match: NodeMatch.NodeMatch; via: string } {
     return sel.result === Result.Success;
 }
-
-// function noInfoFails(routePerfs: ExitPerf[]): ExitPerf[] {
-//     return routePerfs.filter(({ infoFail }) => !infoFail);
-// }
-//
-// function leastReqErrors(routePerfs: ExitPerf[]): ExitPerf[] {
-//     routePerfs.sort((l, r) => l.failures - r.failures);
-//     const min = routePerfs[0].failures;
-//     const idx = routePerfs.findIndex(({ failures }) => min < failures);
-//     if (idx > 0) {
-//         return routePerfs.slice(0, idx);
-//     }
-//     return routePerfs;
-// }
-//
-// function bestReqLatencies(routePerfs: ExitPerf[]): ExitPerf[] {
-//     const haveLats = routePerfs.filter(({ avgLats }) => avgLats > 0);
-//     haveLats.sort((l, r) => l.avgLats - r.avgLats);
-//     return haveLats;
-// }
-//
-// function bestInfoLatencies(routePerfs: ExitPerf[]): ExitPerf[] {
-//     const haveLats = routePerfs.filter(({ infoLatMs }) => infoLatMs > 0);
-//     haveLats.sort((l, r) => l.infoLatMs - r.infoLatMs);
-//     return haveLats;
-// }
-//
-// function leastReqOngoing(routePerfs: ExitPerf[]): ExitPerf[] {
-//     routePerfs.sort((l, r) => l.ongoing - r.ongoing);
-//     const min = routePerfs[0].ongoing;
-//     const idx = routePerfs.findIndex(({ ongoing }) => min < ongoing);
-//     if (idx > 0) {
-//         return routePerfs.slice(0, idx);
-//     }
-//     return routePerfs;
-// }
-//
-// function eSuccess(
-//     { entryNode }: EntryPerf,
-//     routePerfs: ExitPerf[],
-//     via: string,
-// ): Res.Result<NodeSelection> {
-//     const xPerfs = routePerfs.filter(({ entryNode: en }) => en.id === entryNode.id);
-//     const el = randomEl(xPerfs);
-//     return Res.ok({
-//         match: { entryNode, exitNode: el.exitNode, counterOffset: el.counterOffset },
-//         via,
-//     });
-// }
-//
-// function createEntryPerfs(
-//     nodePairs: Map<string, NodePair.NodePair>,
-//     routePerfs: ExitPerf[],
-// ): EntryPerf[] {
-//     const entryNodes = routePerfs.map(({ entryNode }) => entryNode);
-//     return Array.from(new Set(entryNodes)).map((entryNode) => {
-//         const ed = nodePairs.get(entryNode.id)!.entryData;
-//         return {
-//             ...EntryData.perf(ed),
-//             entryNode,
-//         };
-//     });
-// }
-//
-// function leastSegErrors(entryPerfs: EntryPerf[]): EntryPerf[] {
-//     entryPerfs.sort((l, r) => l.segFailures - r.segFailures);
-//     const min = entryPerfs[0].segFailures;
-//     const idx = entryPerfs.findIndex(({ segFailures }) => min < segFailures);
-//     if (idx > 0) {
-//         return entryPerfs.slice(0, idx);
-//     }
-//     return entryPerfs;
-// }
-//
-// function bestSegLatencies(entryPerfs: EntryPerf[]): EntryPerf[] {
-//     const haveLats = entryPerfs.filter(({ segAvgLats }) => segAvgLats > 0);
-//     haveLats.sort((l, r) => l.segAvgLats - r.segAvgLats);
-//     return haveLats;
-// }
-//
-// function leastSegOngoing(entryPerfs: EntryPerf[]): EntryPerf[] {
-//     entryPerfs.sort((l, r) => l.segOngoing - r.segOngoing);
-//     const min = entryPerfs[0].segOngoing;
-//     const idx = entryPerfs.findIndex(({ segOngoing }) => min < segOngoing);
-//     if (idx > 0) {
-//         return entryPerfs.slice(0, idx);
-//     }
-//     return entryPerfs;
-// }
-//
-// function leastMsgsErrors(entryPerfs: EntryPerf[]): EntryPerf[] {
-//     entryPerfs.sort((l, r) => l.msgsFails - r.msgsFails);
-//     const min = entryPerfs[0].msgsFails;
-//     const idx = entryPerfs.findIndex(({ msgsFails }) => min < msgsFails);
-//     if (idx > 0) {
-//         return entryPerfs.slice(0, idx);
-//     }
-//     return entryPerfs;
-// }
-//
-// function bestMsgsLatencies(entryPerfs: EntryPerf[]): EntryPerf[] {
-//     const haveLats = entryPerfs.filter(({ msgsAvgLats }) => msgsAvgLats > 0);
-//     haveLats.sort((l, r) => l.msgsAvgLats - r.msgsAvgLats);
-//     return haveLats;
-// }
-//
-// function quickestPing(entryPerfs: EntryPerf[]): EntryPerf[] {
-//     const havePing = entryPerfs.filter(({ pingDuration }) => pingDuration > 0);
-//     havePing.sort((l, r) => l.pingDuration - r.pingDuration);
-//     return havePing;
-// }

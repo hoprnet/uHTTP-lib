@@ -18,7 +18,7 @@ export type MessageListener = (messages: NodeAPI.Message[]) => void;
 const MessagesFetchInterval = 333; // ms
 const InfoResponseTimeout = 10e3; // 10s
 
-const RelayNodesCompatVersions = ['2.1.0-rc.4-commit.c2b413c0'];
+const RelayNodesCompatVersions = ['2.1'];
 
 export type NodePair = {
     entryNode: EntryNode.EntryNode;
@@ -47,7 +47,7 @@ export function create(
 ): NodePair {
     const entryData = EntryData.create();
     const shortId = Utils.shortPeerId(entryNode.id);
-    const log = RoutingUtils.logger(['sdk', `nodepair${shortId}(${entryNode.apiEndpoint})`]);
+    const log = RoutingUtils.logger(['uhttp-lib', `nodepair${shortId}(${entryNode.apiEndpoint})`]);
     const exitNodesMap = new Map(exitNodes.map((n) => [n.id, n]));
     const exitDatasMap = new Map(exitNodes.map((n) => [n.id, ExitData.create()]));
     return {

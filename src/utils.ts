@@ -18,6 +18,24 @@ export function randomEl<T>(arr: T[]): T {
     return arr[randomIdx(arr)];
 }
 
+/**
+ * Returns random index for an array of weights.
+ */
+export function randomWeightedIdx(weights: number[]): number {
+    const total = weights.reduce((acc, w) => acc + w, 0);
+    const rand = Math.random() * total;
+
+    let cumWeight = 0;
+    for (let i = 0; i < weights.length; i++) {
+        cumWeight += weights[i];
+        if (cumWeight > rand) {
+            return i;
+        }
+    }
+
+    return weights.length - 1;
+}
+
 export function randomIdx<T>(arr: T[]): number {
     return Math.floor(Math.random() * arr.length);
 }

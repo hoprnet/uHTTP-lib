@@ -11,7 +11,7 @@ import * as NodePair from './node-pair';
 import * as NodeSel from './node-selector';
 import * as RoutingUtils from './utils';
 
-const log = RoutingUtils.logger(['sdk', 'nodes-collector']);
+const log = RoutingUtils.logger(['uhttp-lib', 'routing']);
 
 const RoutesFetchInterval = 1e3 * 60 * 10; // 10 min
 const RoutesAmount = 10; // fetch 10 routes
@@ -54,7 +54,11 @@ export class NodesCollector {
                 }
 
                 if (elapsed > timeout) {
-                    log.error('timeout after %d waiting for node pair: %o', elapsed, res);
+                    log.error(
+                        'timeout after %d waiting for node pair: %s',
+                        elapsed,
+                        NodeSel.prettyPrint(res),
+                    );
                     return reject(`Timeout after ${elapsed} ms: ${NodeSel.prettyPrint(res)}`);
                 }
                 setTimeout(check, 100);
