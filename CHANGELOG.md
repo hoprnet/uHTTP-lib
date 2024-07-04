@@ -1,5 +1,12 @@
 # @hoprnet/uhttp-lib
 
+## 3.1.3
+
+### Patch Changes
+
+-   64786ed: Fix relay node compatible version finding
+-   64786ed: Fix logging output namespaces
+
 ## 3.1.2
 
 ### Patch Changes
