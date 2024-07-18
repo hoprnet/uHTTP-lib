@@ -14,7 +14,7 @@ export type ClientOps = {
     discoveryPlatformEndpoint: string;
     clientId: string;
     forceZeroHop: boolean;
-    clientAssociated?: boolean;
+    clientAssociated: boolean;
 };
 
 export type NodeOps = {

@@ -25,6 +25,7 @@ export class NodesCollector {
         private readonly applicationTag: number,
         private readonly messageListener: MessageListener.MessageListener,
         private readonly hops: number,
+        private readonly clientAssociated: boolean,
         private readonly forceManualRelaying: boolean,
     ) {
         this.fetchRoutes();
@@ -148,6 +149,7 @@ export class NodesCollector {
                 discoveryPlatformEndpoint: this.discoveryPlatformEndpoint,
                 clientId: this.clientId,
                 forceZeroHop: this.hops === 0,
+                clientAssociated: this.clientAssociated,
             },
             RoutesAmount,
         )
