@@ -14,6 +14,7 @@ export type ClientOps = {
     discoveryPlatformEndpoint: string;
     clientId: string;
     forceZeroHop: boolean;
+    clientAssociated: boolean;
 };
 
 export type NodeOps = {
@@ -41,6 +42,9 @@ export function getNodes(ops: ClientOps, amount: number): Promise<Nodes> {
     const url = new URL('/api/v1/nodes/pairings', ops.discoveryPlatformEndpoint);
     url.searchParams.set('amount', `${amount}`);
     url.searchParams.set('force_zero_hop', `${ops.forceZeroHop}`);
+    if (ops.clientAssociated !== undefined) {
+        url.searchParams.set('client_associated', `${ops.clientAssociated}`);
+    }
     const headers = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',

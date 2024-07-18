@@ -19,6 +19,7 @@ import Version from './version';
  * @param discoveryPlatformEndpoint discovery platform API endpoint
  * @param timeout - timeout for receiving responses
  * @param forceZeroHop - force no additional hop through the network
+ * @param clientAssociatedExitNodes - query only routes that contain our client associated exit gateways - only viable if you have exit gateways registered with your client
  * @param debugScope - programatically set debug scope for SDK
  * @param logLevel - only print log statements that match at least the desired level: verbose < info < warn < error
  * @param forceManualRelaying - determine relay nodes for requests/responses and enforce them for one hop messages, can not be used with zero hop
@@ -28,6 +29,7 @@ export type Settings = {
     readonly discoveryPlatformEndpoint?: string;
     readonly timeout?: number;
     readonly forceZeroHop?: boolean;
+    readonly clientAssociatedExitNodes?: boolean;
     readonly debugScope?: string;
     readonly logLevel?: string; // 'verbose' | 'info' | 'warn' | 'error'
     readonly forceManualRelaying?: boolean;
@@ -56,6 +58,7 @@ const defaultSettings = {
     discoveryPlatformEndpoint: 'https://discovery.rpch.tech',
     forceManualRelaying: false,
     forceZeroHop: false,
+    clientAssociatedExitNodes: false,
     logLevel: 'info',
     measureLatency: false,
     timeout: 10e3,
@@ -117,6 +120,7 @@ export class Client {
             ApplicationTag,
             this.onMessages,
             this.hops,
+            this.settings.clientAssociatedExitNodes,
             this.settings.forceManualRelaying,
         );
         log.info('uHTTP client[v%s] started', Version);
