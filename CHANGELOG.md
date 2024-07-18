@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.2.0
+
+### Minor Changes
+
+-   a343aec: Allow querying for client associated nodes
+
 ## 3.1.3
 
 ### Patch Changes
