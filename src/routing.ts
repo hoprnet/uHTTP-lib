@@ -48,7 +48,8 @@ const log = RoutingUtils.logger(['uhttp-lib']);
 
 // message tag - more like port since we tag all our messages the same
 // 0xffff reserved for Availability Monitor
-const ApplicationTag = Math.floor(Math.random() * 0xfffe);
+// 0x0000 to 0x3fff reserved for privileged applications
+const ApplicationTag = Math.floor(Math.random() * (0xffff - 0x0400) + 0x0400);
 
 /**
  * Global defaults.
