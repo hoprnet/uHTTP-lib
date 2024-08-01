@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.2.1
+
+### Patch Changes
+
+-   650fc1e: Fix application tag choices to not use privileged ports
+
 ## 3.2.0
 
 ### Minor Changes
