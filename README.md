@@ -4,7 +4,11 @@ Provides common functionality shared across uHTTP applications and modules.
 
 ## Using uHTTP network
 
-If you want to send traffic through uHTTP network, take a look at [Routing](ROUTING.md).
+If you want to route network traffic through uHTTP, take a look at [Routing](ROUTING.md).
+
+## Onboarding to uHTTP network
+
+Follow [onboarding](./ONBOARDING.md) instructions to start hosting your own exit gateways.
 
 ## Deployment
 
