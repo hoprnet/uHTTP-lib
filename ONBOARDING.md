@@ -9,8 +9,8 @@ This routes requests through HOPR's existing uHTTP infrastructure (HOPR mixnet).
 However, for more professional use cases, we recommend hosting your own exit gateways.
 The two major advantages of this approach are:
 
-- Significantly reduced latency
-- Full user privacy (request/response payloads are invisible to uHTTP exit applications)
+-   Significantly reduced latency
+-   Full user privacy (request/response payloads are invisible to uHTTP exit applications)
 
 To benefit from the HOPR mixnet's additional metadata elimination feature, you should run at least three independent exit gateways.
 
@@ -202,15 +202,15 @@ If you do not yet have one, consider this [guide](https://docs.hoprnet.org/node/
 You will need a fair amount of secrets and private-public key pairs to set this all up.
 By now, you should already have a HOPR safe address, a HOPR module address, a uHTTP client ID (secret token) and a Gnosis RPC provider URL.
 
-- [x] uHTTP client ID (secret token)
-- [x] HOPR safe address
-- [x] HOPR module address
-- [x] Gnosis RPC provider
+-   [x] uHTTP client ID (secret token)
+-   [x] HOPR safe address
+-   [x] HOPR module address
+-   [x] Gnosis RPC provider
 
 Each exit gateway hoprd:
 
-- [] Identity/database password (`HOPRD_PASSWORD`)
-- [] API access token (`HOPRD_API_TOKEN`)
+-   [] Identity/database password (`HOPRD_PASSWORD`)
+-   [] API access token (`HOPRD_API_TOKEN`)
 
 Here is a one-liner to generate a secret:
 
@@ -220,9 +220,9 @@ read -r -n 48 pass < <(LC_ALL=C tr -dc "[:alnum:]" < /dev/urandom); echo "$pass"
 
 Each exit gateway exit-app:
 
-- [x] API access token (`UHTTP_EA_HOPRD_ACCESS_TOKEN` - needs to be identical to `HOPRD_API_TOKEN`)
-- [] Private key (`UHTTP_EA_PRIVATE_KEY`)
-- [] Public key (`UHTTP_EA_PUBLIC_KEY`)
+-   [x] API access token (`UHTTP_EA_HOPRD_ACCESS_TOKEN` - needs to be identical to `HOPRD_API_TOKEN`)
+-   [] Private key (`UHTTP_EA_PRIVATE_KEY`)
+-   [] Public key (`UHTTP_EA_PUBLIC_KEY`)
 
 To generate this key pair, clone [uHTTP docker](https://github.com/hoprnet/uhttp-docker) and follow the instructions in `exit-app-create-keypair/README.md`.
 You can also generate this key pair later on when setting up the exit application.
@@ -252,18 +252,18 @@ This repo contains the Docker Compose file that specifies the three services.
 For your gateway node to run correctly, ensure that you have the HOPRd P2P port (9091/tcp/udp) open.
 Then follow these instructions:
 
-- Copy `.env.sample` to `.env` -- values can be left untouched.
-- Copy `.env-secrets.sample` to `.env-secrets`.
-- In `.env-secrets`, replace the placeholder for `HOPRD_PASSWORD` with the generated value from Step 4.
-- In `.env-secrets`, replace the placeholder for `HOPRD_API_TOKEN` with the generated value from Step 4.
-- In `.env-secrets`, replace the placeholder for `UHTTP_EA_HOPRD_ACCESS_TOKEN` with the same value as `HOPRD_API_TOKEN`.
-- In `.env-secrets`, replace the placeholder for `UHTTP_EA_PRIVATE_KEY` with the generated private key.
-- In `.env-secrets`, replace the placeholder for `UHTTP_EA_PUBLIC_KEY` with the generated public key.
-- Open `hoprd_data/hoprd.cfg.yaml` and update the sections in curly brackets:
-   - `hopr.host.address: !IPv4 {your public IP}`
-   - `hopr.chain.provider: {Gnosis RPC provider}`
-   - `hopr.safe_module.safe_address: {HOPR Safe address}`
-   - `hopr.safe_module.module_address: {HOPR Module address}`
+-   Copy `.env.sample` to `.env` -- values can be left untouched.
+-   Copy `.env-secrets.sample` to `.env-secrets`.
+-   In `.env-secrets`, replace the placeholder for `HOPRD_PASSWORD` with the generated value from Step 4.
+-   In `.env-secrets`, replace the placeholder for `HOPRD_API_TOKEN` with the generated value from Step 4.
+-   In `.env-secrets`, replace the placeholder for `UHTTP_EA_HOPRD_ACCESS_TOKEN` with the same value as `HOPRD_API_TOKEN`.
+-   In `.env-secrets`, replace the placeholder for `UHTTP_EA_PRIVATE_KEY` with the generated private key.
+-   In `.env-secrets`, replace the placeholder for `UHTTP_EA_PUBLIC_KEY` with the generated public key.
+-   Open `hoprd_data/hoprd.cfg.yaml` and update the sections in curly brackets:
+    -   `hopr.host.address: !IPv4 {your public IP}`
+    -   `hopr.chain.provider: {Gnosis RPC provider}`
+    -   `hopr.safe_module.safe_address: {HOPR Safe address}`
+    -   `hopr.safe_module.module_address: {HOPR Module address}`
 
 Let's download the required images first:
 
@@ -300,12 +300,13 @@ Customers accessing your endpoints should be routed exclusively through your uHT
 Therefore, uHTTP also needs to associate your exit gateways with your client ID.
 
 The following information is required for each gateway:
-- [] hoprd peer ID
-- [] hoprd native address
-- [x] hoprd API endpoint (IP address and port)
-- [x] hoprd API token (`HOPRD_API_TOKEN`)
-- [x] exit app public key (`UHTTP_EA_PUBLIC_KEY`)
-- [x] uHTTP client ID (secret token)
+
+-   [] hoprd peer ID
+-   [] hoprd native address
+-   [x] hoprd API endpoint (IP address and port)
+-   [x] hoprd API token (`HOPRD_API_TOKEN`)
+-   [x] exit app public key (`UHTTP_EA_PUBLIC_KEY`)
+-   [x] uHTTP client ID (secret token)
 
 To determine your peer ID and native address, you could check the Addresses section of the INFO page in your [Admin UI](#checking-hoprd-admin-ui), or you can run the following command:
 
@@ -346,8 +347,8 @@ const router = new Routing.Client(<YOUR CLIENT ID>, { forceZeroHop: true, client
 
 The client library requires your client ID to request potential routes from uHTTP.
 
-- The `forceZeroHop: true` option is mandatory at the moment.
-- The `clientAssociatedExitNodes: true` option ensures that you receive routes exclusively to your registered exit gateways.
+-   The `forceZeroHop: true` option is mandatory at the moment.
+-   The `clientAssociatedExitNodes: true` option ensures that you receive routes exclusively to your registered exit gateways.
 
 ### C. Replace Fetch Requests
 
@@ -355,18 +356,18 @@ Use `router.fetch` instead of the standard `fetch` to route requests through the
 
 ```ts
 async function getData() {
-  const url = "https://example.org/products.json";
-  try {
-    // use uHTTP router instead of plain fetch
-    const response = await router.fetch(url);
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status}`);
-    }
+    const url = 'https://example.org/products.json';
+    try {
+        // use uHTTP router instead of plain fetch
+        const response = await router.fetch(url);
+        if (!response.ok) {
+            throw new Error(`Response status: ${response.status}`);
+        }
 
-    const json = await response.json();
-    console.log(json);
-  } catch (error) {
-    console.error(error.message);
-  }
+        const json = await response.json();
+        console.log(json);
+    } catch (error) {
+        console.error(error.message);
+    }
 }
 ```
