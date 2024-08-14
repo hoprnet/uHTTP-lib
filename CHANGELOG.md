@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.3.0
+
+### Minor Changes
+
+-   9fb00b4: Allow domain reporting
+
 ## 3.2.1
 
 ### Patch Changes
