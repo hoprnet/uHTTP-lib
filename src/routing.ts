@@ -23,7 +23,7 @@ import Version from './version';
  * @param debugScope - programatically set debug scope for SDK
  * @param logLevel - only print log statements that match at least the desired level: verbose < info < warn < error
  * @param forceManualRelaying - determine relay nodes for requests/responses and enforce them for one hop messages, can not be used with zero hop
- * @param measureLatency - determine duration of actual request from exit node, populates response stats
+ * @param measureLatency - determine duration of actual request from exit node, prints response stats
  */
 export type Settings = {
     readonly discoveryPlatformEndpoint?: string;
@@ -37,12 +37,39 @@ export type Settings = {
 };
 
 /**
+ * uHTTP stats for detailed latency analysis - only available if **measureLatency** is enabled
+ *
+ */
+export type LatencyStatistics = {
+    segDur: number; // time spent sending all request segments
+    rpcDur: number; // time exit app spent making the actual request
+    exitAppDur: number; // time exit app spent reconstructing request
+    hoprDur: number; // approximate time all segments took routing through hoprnet back and forth
+};
+
+/**
+ * uHTTP stimple latency stats without **measureLatency** set
+ *
+ */
+export type ReducedLatencyStatistics = {
+    segDur: number; // time spent sending all request segments
+};
+
+/**
  * Use this to intercept the request manually before it gets encrypted and packaged to be sent to the network.
  * Can be used for logging or mangling of the final request.
  */
 export type OnRequestCreationHandler = (
     requestOptions: Request.CreateOptions,
 ) => Request.CreateOptions;
+
+/**
+ * Use this to intercept latency statistics reporting.
+ * Will only contain full **LatencyStatistics** if **measureLatency** is enabled.
+ */
+export type OnLatencyStatisticsHandler = (
+    stats: LatencyStatistics | ReducedLatencyStatistics,
+) => void;
 
 const log = RoutingUtils.logger(['uhttp-lib']);
 
@@ -94,6 +121,7 @@ export class Client {
     private readonly settings;
     private readonly hops?: number;
     public onRequestCreationHandler: OnRequestCreationHandler = (r) => r;
+    public onLatencyStatisticsHandler: OnLatencyStatisticsHandler = (_) => {};
 
     /**
      * Construct a routing client instance providing a fetch shim when ready.
@@ -542,14 +570,13 @@ export class Client {
             const rpcDur = resp.callDuration;
             const exitAppDur = resp.exitAppDuration;
             const hoprDur = responseTime - rpcDur - exitAppDur - segDur;
-            return {
-                segDur,
-                rpcDur,
-                exitAppDur,
-                hoprDur,
-            };
+            const stats = { segDur, rpcDur, exitAppDur, hoprDur };
+            this.onLatencyStatisticsHandler(stats);
+            return stats;
         }
-        return { segDur };
+        const stats = { segDur };
+        this.onLatencyStatisticsHandler(stats);
+        return stats;
     };
 
     private errHeaders = (headers?: Record<string, string>): Record<string, string> => {
