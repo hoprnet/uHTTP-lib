@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.4.1
+
+### Patch Changes
+
+-   Exposing type helper function
+
 ## 3.4.0
 
 ### Minor Changes
