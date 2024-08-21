@@ -587,7 +587,7 @@ export class Client {
 /**
  * Typescript helper for **LatencyStatistics** type.
  */
-export function LatencyStatistics(
+export function isLatencyStatistics(
     stats: LatencyStatistics | ReducedLatencyStatistics,
 ): stats is LatencyStatistics {
     return 'hoprDur' in stats;
