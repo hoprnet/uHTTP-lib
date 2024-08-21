@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.4.0
+
+### Minor Changes
+
+-   210f72d: Enable interface to intercept latency reporting programmatically
+
 ## 3.3.0
 
 ### Minor Changes
