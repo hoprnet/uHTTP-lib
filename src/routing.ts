@@ -583,3 +583,12 @@ export class Client {
         return { ...headers, 'Content-Type': 'application/json' };
     };
 }
+
+/**
+ * Typescript helper for **LatencyStatistics** type.
+ */
+export function LatencyStatistics(
+    stats: LatencyStatistics | ReducedLatencyStatistics,
+): stats is LatencyStatistics {
+    return 'hoprDur' in stats;
+}
