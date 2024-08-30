@@ -21,6 +21,7 @@ const InfoResponseTimeout = 10e3; // 10s
 const RelayNodesCompatVersions = ['2.1'];
 
 export type NodePair = {
+    pinnedFetch: typeof globalThis.fetch;
     entryNode: EntryNode.EntryNode;
     entryData: EntryData.EntryData;
     exitNodes: Map<string, ExitNode.ExitNode>;
@@ -38,6 +39,7 @@ export type NodePair = {
 };
 
 export function create(
+    pinnedFetch: typeof globalThis.fetch,
     entryNode: EntryNode.EntryNode,
     exitNodes: ExitNode.ExitNode[],
     applicationTag: number,
@@ -51,6 +53,7 @@ export function create(
     const exitNodesMap = new Map(exitNodes.map((n) => [n.id, n]));
     const exitDatasMap = new Map(exitNodes.map((n) => [n.id, ExitData.create()]));
     return {
+        pinnedFetch,
         entryNode,
         entryData,
         exitNodes: exitNodesMap,
@@ -155,7 +158,7 @@ export function segmentFailed(np: NodePair, seg: Segment.Segment) {
 export function discover(np: NodePair) {
     const startPingTime = performance.now();
     if (np.hops === 0 || !np.forceManualRelaying) {
-        NodeAPI.version(np.entryNode)
+        NodeAPI.version({ ...np.entryNode, pinnedFetch: np.pinnedFetch })
             .then(() => {
                 np.entryData.pingDuration = Math.round(performance.now() - startPingTime);
                 np.log.verbose('version ping took %dms', np.entryData.pingDuration);
@@ -164,7 +167,7 @@ export function discover(np: NodePair) {
                 np.log.error('error fetching version: %s[%o]', JSON.stringify(err), err);
             });
     } else {
-        NodeAPI.getPeers(np.entryNode)
+        NodeAPI.getPeers({ ...np.entryNode, pinnedFetch: np.pinnedFetch })
             .then((r) => incPeers(np, r, startPingTime))
             .catch((err) => {
                 np.log.error('error fetching peers: %s[%o]', JSON.stringify(err), err);
@@ -188,6 +191,7 @@ function requestInfo(np: NodePair, exitNode: ExitNode.ExitNode) {
         {
             ...np.entryNode,
             hops: np.hops,
+            pinnedFetch: np.pinnedFetch,
         },
         {
             recipient: exitNode.id,
@@ -287,7 +291,7 @@ function prettyOngoingNumbers(
 
 function fetchMessages(np: NodePair) {
     const bef = performance.now();
-    NodeAPI.retrieveMessages(np.entryNode, np.applicationTag)
+    NodeAPI.retrieveMessages({ ...np.entryNode, pinnedFetch: np.pinnedFetch }, np.applicationTag)
         .then(({ messages }) => {
             const lat = Math.round(performance.now() - bef);
             np.entryData.fetchMessagesSuccesses++;

@@ -18,13 +18,17 @@ export type GenericResponse = {
     data?: number[];
 };
 
-export async function fetchUrl(endpoint: string, params?: Parameters): Promise<GenericResponse> {
+export async function fetchUrl(
+    pinnedFetch: typeof globalThis.fetch,
+    endpoint: string,
+    params?: Parameters,
+): Promise<GenericResponse> {
     const url = new URL(endpoint);
     const body = params?.body;
     const method = normalizeMethod(params?.method);
     const headers = normalizeHeaders(url, params?.headers, body);
     const timeout = params?.timeout ?? DefaultEndpointTimeout;
-    return fetch(url, { headers, method, body, signal: AbortSignal.timeout(timeout) }).then(
+    return pinnedFetch(url, { headers, method, body, signal: AbortSignal.timeout(timeout) }).then(
         async (res) => {
             const status = res.status;
             const statusText = res.statusText;

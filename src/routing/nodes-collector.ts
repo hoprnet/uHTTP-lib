@@ -20,6 +20,7 @@ export class NodesCollector {
     private readonly nodePairs: Map<string, NodePair.NodePair> = new Map();
 
     constructor(
+        private readonly pinnedFetch: typeof globalThis.fetch,
         private readonly discoveryPlatformEndpoint: string,
         private readonly clientId: string,
         private readonly applicationTag: number,
@@ -28,7 +29,7 @@ export class NodesCollector {
         private readonly clientAssociated: boolean,
         private readonly forceManualRelaying: boolean,
     ) {
-        this.fetchRoutes();
+        this.fetchRoutes(pinnedFetch);
     }
 
     public destruct = () => {
@@ -143,9 +144,10 @@ export class NodesCollector {
         log.warn('failed %s on %s', Segment.prettyPrint(seg), NodePair.prettyPrint(np));
     };
 
-    private fetchRoutes = () => {
+    private fetchRoutes = (pinnedFetch: typeof globalThis.fetch) => {
         DPapi.getNodes(
             {
+                pinnedFetch,
                 discoveryPlatformEndpoint: this.discoveryPlatformEndpoint,
                 clientId: this.clientId,
                 forceZeroHop: this.hops === 0,
@@ -189,6 +191,7 @@ export class NodesCollector {
                 NodePair.addExitNodes(np, exitNodes);
             } else {
                 const np = NodePair.create(
+                    this.pinnedFetch,
                     en,
                     exitNodes,
                     this.applicationTag,
@@ -221,7 +224,7 @@ export class NodesCollector {
         const logS = Math.round(next / 1000) - logM * 60;
 
         log.verbose('scheduling next node pair fetching in %dm%ds', logM, logS);
-        setTimeout(() => this.fetchRoutes(), next);
+        setTimeout(() => this.fetchRoutes(this.pinnedFetch), next);
     };
 
     private logDPoffline = () => {

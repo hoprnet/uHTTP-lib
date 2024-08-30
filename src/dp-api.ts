@@ -12,6 +12,7 @@ export const Unauthorized = 'unauthorized';
 
 export type ClientOps = {
     discoveryPlatformEndpoint: string;
+    pinnedFetch: typeof globalThis.fetch;
     clientId: string;
     forceZeroHop: boolean;
     clientAssociated: boolean;
@@ -19,6 +20,7 @@ export type ClientOps = {
 
 export type NodeOps = {
     discoveryPlatformEndpoint: string;
+    pinnedFetch: typeof globalThis.fetch;
     nodeAccessToken: string;
     timeout?: number;
 };
@@ -52,16 +54,18 @@ export function getNodes(ops: ClientOps, amount: number): Promise<Nodes> {
         'x-rpch-client': ops.clientId,
     };
 
-    return fetch(url, { headers, signal: AbortSignal.timeout(DefaultDpTimeout) }).then((res) => {
-        switch (res.status) {
-            case 204: // none found
-                throw new Error(NoMoreNodes);
-            case 403: // unauthorized
-                throw new Error(Unauthorized);
-            default:
-                return res.json();
-        }
-    });
+    return ops
+        .pinnedFetch(url, { headers, signal: AbortSignal.timeout(DefaultDpTimeout) })
+        .then((res) => {
+            switch (res.status) {
+                case 204: // none found
+                    throw new Error(NoMoreNodes);
+                case 403: // unauthorized
+                    throw new Error(Unauthorized);
+                default:
+                    return res.json();
+            }
+        });
 }
 
 export function postQuota(
@@ -83,7 +87,12 @@ export function postQuota(
         domain,
     });
     return new Promise((pRes, pRej) => {
-        fetch(url, { headers, method: 'POST', body, signal: AbortSignal.timeout(DefaultDpTimeout) })
+        ops.pinnedFetch(url, {
+            headers,
+            method: 'POST',
+            body,
+            signal: AbortSignal.timeout(DefaultDpTimeout),
+        })
             .then((res) => {
                 if (res.status === 204) {
                     return pRes();
