@@ -372,7 +372,7 @@ function incPeers(np: NodePair, res: NodeAPI.Peers | NodeAPI.NodeError, startPin
             RelayNodesCompatVersions.some((v) => reportedVersion.startsWith(v)),
         )
         .map(({ peerId, peerAddress }) => ({ peerId, peerAddress }));
-    NodeAPI.getNodeChannels(np.entryNode)
+    NodeAPI.getNodeChannels({ ...np.entryNode, pinnedFetch: np.pinnedFetch })
         .then((ch) => {
             incChannels(np, ch, peers, startPingTime);
         })

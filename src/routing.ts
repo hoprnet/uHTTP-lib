@@ -120,6 +120,7 @@ export class Client {
     private readonly nodesColl: NodesCollector.NodesCollector;
     private readonly settings;
     private readonly hops?: number;
+    private readonly pinnedFetch: typeof globalThis.fetch = globalThis.fetch;
     public onRequestCreationHandler: OnRequestCreationHandler = (r) => r;
     public onLatencyStatisticsHandler: OnLatencyStatisticsHandler = (_) => {};
 
@@ -144,6 +145,7 @@ export class Client {
         this.segmentCache = SegmentCache.init();
         this.hops = this.determineHops(this.settings.forceZeroHop);
         this.nodesColl = new NodesCollector.NodesCollector(
+            this.pinnedFetch,
             this.settings.discoveryPlatformEndpoint,
             this.clientId,
             ApplicationTag,
@@ -301,6 +303,7 @@ export class Client {
             accessToken: entryNode.accessToken,
             hops: request.hops,
             relay: request.reqRelayPeerId,
+            pinnedFetch: this.pinnedFetch,
         };
         NodeAPI.sendMessage(conn, {
             recipient: request.exitPeerId,
@@ -408,6 +411,7 @@ export class Client {
                 accessToken: entryNode.accessToken,
                 hops: request.hops,
                 relay: request.reqRelayPeerId,
+                pinnedFetch: this.pinnedFetch,
             },
             {
                 recipient: request.exitPeerId,
