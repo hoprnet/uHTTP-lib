@@ -120,7 +120,7 @@ export class Client {
     private readonly nodesColl: NodesCollector.NodesCollector;
     private readonly settings;
     private readonly hops?: number;
-    private readonly pinnedFetch: typeof globalThis.fetch = globalThis.fetch;
+    private readonly pinnedFetch: typeof globalThis.fetch = globalThis.fetch.bind(globalThis);
     public onRequestCreationHandler: OnRequestCreationHandler = (r) => r;
     public onLatencyStatisticsHandler: OnLatencyStatisticsHandler = (_) => {};
 
