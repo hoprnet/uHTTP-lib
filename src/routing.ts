@@ -71,6 +71,10 @@ export type OnLatencyStatisticsHandler = (
     stats: LatencyStatistics | ReducedLatencyStatistics,
 ) => void;
 
+/**
+ * Specify a RegExp that can match request URLs.
+ * Or provide a function that returns true if the **URLMatcher** should *match*.
+ */
 export type URLMatcher = (
     endpoint: URL | string,
     // @ts-expect-error globalThis.RequestInit works in TS but not in node
