@@ -1,5 +1,11 @@
 # @hoprnet/uhttp-lib
 
+## 3.6.0
+
+### Minor Changes
+
+-   ecb0302: Provide easier access to global singleton
+
 ## 3.5.0
 
 ### Minor Changes
