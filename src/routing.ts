@@ -642,6 +642,8 @@ export class Client {
 export class Singleton {
     private static client: Client;
 
+    private constructor() {}
+
     /**
      * Create a new instance of **Client** or get existing one.
      * Can be called without arguments after initialization.
