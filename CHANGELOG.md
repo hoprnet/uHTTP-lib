@@ -1,5 +1,12 @@
 # @hoprnet/uhttp-lib
 
+## 3.5.0
+
+### Minor Changes
+
+-   1e2d8b1: Offer convenience singleton wrapper
+-   1e2d8b1: Implement global fetch API overrides based on regex or function switch for full control.
+
 ## 3.4.2
 
 ### Patch Changes
