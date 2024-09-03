@@ -637,6 +637,33 @@ export class Client {
 }
 
 /**
+ * Singleton wrapper around **Client** for convenience reasons.
+ */
+export class Singleton {
+    private static client: Client;
+
+    /**
+     * Create a new instance of **Client** or get existing one.
+     * Can be called without arguments after initialization.
+     */
+    public static instance(clientId?: string, settings?: Settings): Client {
+        if (Singleton.client) {
+            return Singleton.client;
+        }
+        if (!clientId) {
+            const msg = [
+                'Cannot instantiate uHTTP Client without a clientId.',
+                'If you want to use this singleton instance without providing a clientId,',
+                'make sure you call `Singleton.instance(clientId)` from another location before!',
+            ].join('\n');
+            throw new Error(msg);
+        }
+        Singleton.client = new Client(clientId, settings);
+        return Singleton.client;
+    }
+}
+
+/**
  * Typescript helper for **LatencyStatistics** type.
  */
 export function isLatencyStatistics(
