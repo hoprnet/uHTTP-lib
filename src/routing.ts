@@ -71,6 +71,12 @@ export type OnLatencyStatisticsHandler = (
     stats: LatencyStatistics | ReducedLatencyStatistics,
 ) => void;
 
+export type URLMatcher = (
+    endpoint: URL | string,
+    // @ts-expect-error globalThis.RequestInit works in TS but not in node
+    params?: typeof globalThis.RequestInit,
+) => boolean;
+
 const log = RoutingUtils.logger(['uhttp-lib']);
 
 // message tag - more like port since we tag all our messages the same
@@ -110,6 +116,8 @@ export type FetchOptions = {
     timeout?: number;
 };
 
+const globalFetch = globalThis.fetch.bind(globalThis);
+
 /**
  * Send traffic through uHTTP network
  */
@@ -120,7 +128,6 @@ export class Client {
     private readonly nodesColl: NodesCollector.NodesCollector;
     private readonly settings;
     private readonly hops?: number;
-    private readonly pinnedFetch: typeof globalThis.fetch = globalThis.fetch.bind(globalThis);
     public onRequestCreationHandler: OnRequestCreationHandler = (r) => r;
     public onLatencyStatisticsHandler: OnLatencyStatisticsHandler = (_) => {};
 
@@ -145,7 +152,7 @@ export class Client {
         this.segmentCache = SegmentCache.init();
         this.hops = this.determineHops(this.settings.forceZeroHop);
         this.nodesColl = new NodesCollector.NodesCollector(
-            this.pinnedFetch,
+            globalFetch,
             this.settings.discoveryPlatformEndpoint,
             this.clientId,
             ApplicationTag,
@@ -291,6 +298,43 @@ export class Client {
         });
     };
 
+    /**
+     * Use this function to selectively override global fetch API calls.
+     * Any matching calls to fetch will be routed through uHTTP.
+     *
+     * Restore original fetch with **restoreGlobalFetch**.
+     */
+    public overrideGlobalFetch = (urlMatcher: URLMatcher) => {
+        // TODO fix types
+        // @ts-expect-error will fix types later
+        globalThis.fetch = async function (
+            endpoint: URL | string,
+            // @ts-expect-error globalThis.RequestInit works in TS but not in node
+            params?: typeof globalThis.RequestInit,
+        ) {
+            if (typeof urlMatcher === 'function' && urlMatcher(endpoint, params)) {
+                const origin = window?.location.origin ?? endpoint;
+                const url = new URL(endpoint, origin);
+                return this.fetch(url, params);
+            }
+
+            if (urlMatcher instanceof RegExp && endpoint.toString().match(urlMatcher)) {
+                const origin = window?.location.origin ?? endpoint;
+                const url = new URL(endpoint, origin);
+                return this.fetch(url, params);
+            }
+
+            return globalFetch(endpoint, params);
+        };
+    };
+
+    /**
+     * Restore global fetch API after overriding it with **overrideGlobalFetch**.
+     */
+    public restoreGlobalFetch = () => {
+        globalThis.fetch = globalFetch;
+    };
+
     private sendSegment = (
         request: Request.Request,
         segment: Segment.Segment,
@@ -303,7 +347,7 @@ export class Client {
             accessToken: entryNode.accessToken,
             hops: request.hops,
             relay: request.reqRelayPeerId,
-            pinnedFetch: this.pinnedFetch,
+            pinnedFetch: globalFetch,
         };
         NodeAPI.sendMessage(conn, {
             recipient: request.exitPeerId,
@@ -411,7 +455,7 @@ export class Client {
                 accessToken: entryNode.accessToken,
                 hops: request.hops,
                 relay: request.reqRelayPeerId,
-                pinnedFetch: this.pinnedFetch,
+                pinnedFetch: globalFetch,
             },
             {
                 recipient: request.exitPeerId,
