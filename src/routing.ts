@@ -71,6 +71,16 @@ export type OnLatencyStatisticsHandler = (
     stats: LatencyStatistics | ReducedLatencyStatistics,
 ) => void;
 
+/**
+ * Specify a RegExp that can match request URLs.
+ * Or provide a function that returns true if the **URLMatcher** should *match*.
+ */
+export type URLMatcher = (
+    endpoint: URL | string,
+    // @ts-expect-error globalThis.RequestInit works in TS but not in node
+    params?: typeof globalThis.RequestInit,
+) => boolean;
+
 const log = RoutingUtils.logger(['uhttp-lib']);
 
 // message tag - more like port since we tag all our messages the same
@@ -110,6 +120,8 @@ export type FetchOptions = {
     timeout?: number;
 };
 
+const globalFetch = globalThis.fetch.bind(globalThis);
+
 /**
  * Send traffic through uHTTP network
  */
@@ -144,6 +156,7 @@ export class Client {
         this.segmentCache = SegmentCache.init();
         this.hops = this.determineHops(this.settings.forceZeroHop);
         this.nodesColl = new NodesCollector.NodesCollector(
+            globalFetch,
             this.settings.discoveryPlatformEndpoint,
             this.clientId,
             ApplicationTag,
@@ -289,6 +302,43 @@ export class Client {
         });
     };
 
+    /**
+     * Use this function to selectively override global fetch API calls.
+     * Any matching calls to fetch will be routed through uHTTP.
+     *
+     * Restore original fetch with **restoreGlobalFetch**.
+     */
+    public overrideGlobalFetch = (urlMatcher: URLMatcher) => {
+        // TODO fix types
+        // @ts-expect-error will fix types later
+        globalThis.fetch = async function (
+            endpoint: URL | string,
+            // @ts-expect-error globalThis.RequestInit works in TS but not in node
+            params?: typeof globalThis.RequestInit,
+        ) {
+            if (typeof urlMatcher === 'function' && urlMatcher(endpoint, params)) {
+                const origin = window?.location.origin ?? endpoint;
+                const url = new URL(endpoint, origin);
+                return this.fetch(url, params);
+            }
+
+            if (urlMatcher instanceof RegExp && endpoint.toString().match(urlMatcher)) {
+                const origin = window?.location.origin ?? endpoint;
+                const url = new URL(endpoint, origin);
+                return this.fetch(url, params);
+            }
+
+            return globalFetch(endpoint, params);
+        };
+    };
+
+    /**
+     * Restore global fetch API after overriding it with **overrideGlobalFetch**.
+     */
+    public restoreGlobalFetch = () => {
+        globalThis.fetch = globalFetch;
+    };
+
     private sendSegment = (
         request: Request.Request,
         segment: Segment.Segment,
@@ -301,6 +351,7 @@ export class Client {
             accessToken: entryNode.accessToken,
             hops: request.hops,
             relay: request.reqRelayPeerId,
+            pinnedFetch: globalFetch,
         };
         NodeAPI.sendMessage(conn, {
             recipient: request.exitPeerId,
@@ -408,6 +459,7 @@ export class Client {
                 accessToken: entryNode.accessToken,
                 hops: request.hops,
                 relay: request.reqRelayPeerId,
+                pinnedFetch: globalFetch,
             },
             {
                 recipient: request.exitPeerId,
@@ -582,6 +634,35 @@ export class Client {
     private errHeaders = (headers?: Record<string, string>): Record<string, string> => {
         return { ...headers, 'Content-Type': 'application/json' };
     };
+}
+
+/**
+ * Singleton wrapper around **Client** for convenience reasons.
+ */
+export class Singleton {
+    private static client: Client;
+
+    private constructor() {}
+
+    /**
+     * Create a new instance of **Client** or get existing one.
+     * Can be called without arguments after initialization.
+     */
+    public static instance(clientId?: string, settings?: Settings): Client {
+        if (Singleton.client) {
+            return Singleton.client;
+        }
+        if (!clientId) {
+            const msg = [
+                'Cannot instantiate uHTTP Client without a clientId.',
+                'If you want to use this singleton instance without providing a clientId,',
+                'make sure you call `Singleton.instance(clientId)` from another location before!',
+            ].join('\n');
+            throw new Error(msg);
+        }
+        Singleton.client = new Client(clientId, settings);
+        return Singleton.client;
+    }
 }
 
 /**

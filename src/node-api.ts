@@ -3,8 +3,11 @@ import WebSocket = require('isomorphic-ws');
 /**
  * to be replaced with HOPR sdk soon.
  */
-
-export type ConnInfo = { apiEndpoint: URL; accessToken: string };
+export type ConnInfo = {
+    apiEndpoint: URL;
+    accessToken: string;
+    pinnedFetch: typeof globalThis.fetch;
+};
 
 export type Message = { tag: number; body: string; receivedAt: number };
 
@@ -101,7 +104,7 @@ export async function sendMessage(
         }
     }
     const body = JSON.stringify(payload);
-    const res = await fetch(url, { method: 'POST', headers, body });
+    const res = await conn.pinnedFetch(url, { method: 'POST', headers, body });
     if (res.ok) {
         return res.json();
     }
@@ -116,7 +119,7 @@ export function version(conn: ConnInfo) {
         'Content-Type': 'application/json',
         'x-auth-token': conn.accessToken,
     };
-    return fetch(url, { headers }).then((res) => res.json());
+    return conn.pinnedFetch(url, { headers }).then((res) => res.json());
 }
 
 export function retrieveMessages(conn: ConnInfo, tag: number): Promise<{ messages: Message[] }> {
@@ -127,7 +130,7 @@ export function retrieveMessages(conn: ConnInfo, tag: number): Promise<{ message
         'x-auth-token': conn.accessToken,
     };
     const body = JSON.stringify({ tag });
-    return fetch(url, { method: 'POST', headers, body }).then((res) => {
+    return conn.pinnedFetch(url, { method: 'POST', headers, body }).then((res) => {
         return res.json() as unknown as { messages: Message[] };
     });
 }
@@ -141,7 +144,7 @@ export function deleteMessages(conn: ConnInfo, tag: number): Promise<void> {
         'x-auth-token': conn.accessToken,
     };
     return new Promise((resolve, reject) => {
-        return fetch(url, { method: 'DELETE', headers }).then((res) => {
+        return conn.pinnedFetch(url, { method: 'DELETE', headers }).then((res) => {
             if (res.status === 204) {
                 return resolve();
             }
@@ -157,7 +160,7 @@ export function accountAddresses(conn: ConnInfo) {
         'Content-Type': 'application/json',
         'x-auth-token': conn.accessToken,
     };
-    return fetch(url, { headers }).then((res) => {
+    return conn.pinnedFetch(url, { headers }).then((res) => {
         if (res.ok) {
             return res.json() as unknown as { native: string; hopr: string };
         }
@@ -173,7 +176,7 @@ export function getPeers(conn: ConnInfo): Promise<Peers | NodeError> {
         'Content-Type': 'application/json',
         'x-auth-token': conn.accessToken,
     };
-    return fetch(url, { headers }).then((res) => res.json());
+    return conn.pinnedFetch(url, { headers }).then((res) => res.json());
 }
 
 export function getAllChannels(conn: ConnInfo): Promise<AllChannels> {
@@ -184,7 +187,7 @@ export function getAllChannels(conn: ConnInfo): Promise<AllChannels> {
         'Content-Type': 'application/json',
         'x-auth-token': conn.accessToken,
     };
-    return fetch(url, { headers }).then((res) => res.json());
+    return conn.pinnedFetch(url, { headers }).then((res) => res.json());
 }
 
 export function getNodeChannels(conn: ConnInfo): Promise<NodeChannels> {
@@ -194,7 +197,7 @@ export function getNodeChannels(conn: ConnInfo): Promise<NodeChannels> {
         'Content-Type': 'application/json',
         'x-auth-token': conn.accessToken,
     };
-    return fetch(url, { headers }).then((res) => res.json());
+    return conn.pinnedFetch(url, { headers }).then((res) => res.json());
 }
 
 export function isError(payload: NonNullable<unknown> | NodeError): payload is NodeError {
