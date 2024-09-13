@@ -2,8 +2,8 @@ import * as EntryNode from './entry-node';
 import * as NodeAPI from './node-api';
 import * as NodesCollector from './routing/nodes-collector';
 import * as Payload from './payload';
-import * as Request from './request';
-import * as RequestCache from './routing/request-cache';
+import * as IntReq from './request';
+import * as IntReqCache from './routing/request-cache';
 import * as IntResp from './response';
 import * as Result from './result';
 import * as RoutingUtils from './routing/utils';
@@ -60,8 +60,8 @@ export type ReducedLatencyStatistics = {
  * Can be used for logging or mangling of the final request.
  */
 export type OnRequestCreationHandler = (
-    requestOptions: Request.CreateOptions,
-) => Request.CreateOptions;
+    requestOptions: IntReq.CreateOptions,
+) => IntReq.CreateOptions;
 
 /**
  * Use this to intercept latency statistics reporting.
@@ -127,7 +127,7 @@ const globalFetch = globalThis.fetch.bind(globalThis);
  * Send traffic through uHTTP network
  */
 export class Client {
-    private readonly requestCache: RequestCache.Cache;
+    private readonly requestCache: IntReqCache.Cache;
     private readonly segmentCache: SegmentCache.Cache;
     private readonly redoRequests: Set<string> = new Set();
     private readonly nodesColl: NodesCollector.NodesCollector;
@@ -153,7 +153,7 @@ export class Client {
                 this.settings.logLevel,
             );
         }
-        this.requestCache = RequestCache.init();
+        this.requestCache = IntReqCache.init();
         this.segmentCache = SegmentCache.init();
         this.hops = this.determineHops(this.settings.forceZeroHop);
         this.nodesColl = new NodesCollector.NodesCollector(
@@ -175,7 +175,7 @@ export class Client {
     public destruct = () => {
         this.nodesColl.destruct();
         for (const [rId] of this.requestCache) {
-            RequestCache.remove(this.requestCache, rId);
+            IntReqCache.remove(this.requestCache, rId);
             SegmentCache.remove(this.segmentCache, rId);
         }
     };
@@ -231,9 +231,9 @@ export class Client {
         });
 
         const { entryNode, exitNode, counterOffset } = resNodes;
-        const id = RequestCache.generateId(this.requestCache);
+        const id = IntReqCache.generateId(this.requestCache);
         const exitPublicKey = Utils.hexStringToBytes(exitNode.pubKey);
-        const reqOpts: Request.CreateOptions = {
+        const reqOpts: IntReq.CreateOptions = {
             id,
             clientId: this.clientId,
             provider: endpoint.toString(),
@@ -264,7 +264,7 @@ export class Client {
         const adjustedReqOpts = this.onRequestCreationHandler(reqOpts);
 
         // create request
-        const resReq = Request.create(adjustedReqOpts);
+        const resReq = IntReq.create(adjustedReqOpts);
         if (Result.isErr(resReq)) {
             log.error('error creating request', resReq.error);
             throw new Error('Unable to create request object');
@@ -272,18 +272,18 @@ export class Client {
 
         // split request to segments
         const { request, session } = resReq.res;
-        const segments = Request.toSegments(request, session);
+        const segments = IntReq.toSegments(request, session);
 
         return new Promise((resolve, reject) => {
             // set request expiration timer
             const timer = setTimeout(() => {
-                log.error('%s expired after %dms timeout', Request.prettyPrint(request), timeout);
+                log.error('%s expired after %dms timeout', IntReq.prettyPrint(request), timeout);
                 this.removeRequest(request);
                 reject('Request timed out');
             }, timeout);
 
             // keep tabs on request
-            const entry = RequestCache.add(this.requestCache, {
+            const entry = IntReqCache.add(this.requestCache, {
                 request,
                 resolve,
                 reject,
@@ -293,7 +293,7 @@ export class Client {
             this.nodesColl.requestStarted(request);
 
             // send request to hoprd
-            log.info('sending request %s', Request.prettyPrint(request));
+            log.info('sending request %s', IntReq.prettyPrint(request));
 
             // queue segment sending for all of them
             for (const s of segments) {
@@ -341,10 +341,10 @@ export class Client {
     };
 
     private sendSegment = (
-        request: Request.Request,
+        request: IntReq.Request,
         segment: Segment.Segment,
         entryNode: EntryNode.EntryNode,
-        cacheEntry: RequestCache.Entry,
+        cacheEntry: IntReqCache.Entry,
     ) => {
         const bef = performance.now();
         const conn = {
@@ -373,9 +373,9 @@ export class Client {
     };
 
     private resendRequest = (
-        origReq: Request.Request,
+        origReq: IntReq.Request,
         entryNode: EntryNode.EntryNode,
-        cacheEntry: RequestCache.Entry,
+        cacheEntry: IntReqCache.Entry,
     ) => {
         if (this.redoRequests.has(origReq.id)) {
             log.verbose('ignoring already triggered resend', origReq.id);
@@ -400,9 +400,9 @@ export class Client {
         }
 
         // generate new request
-        const id = RequestCache.generateId(this.requestCache);
+        const id = IntReqCache.generateId(this.requestCache);
         const exitPublicKey = Utils.hexStringToBytes(fallback.exitNode.pubKey);
-        const resReq = Request.create({
+        const resReq = IntReq.create({
             id,
             originalId: origReq.id,
             provider: origReq.provider,
@@ -426,10 +426,10 @@ export class Client {
 
         // split request to segments
         const { request, session } = resReq.res;
-        const segments = Request.toSegments(request, session);
+        const segments = IntReq.toSegments(request, session);
 
         // track request
-        const newCacheEntry = RequestCache.add(this.requestCache, {
+        const newCacheEntry = IntReqCache.add(this.requestCache, {
             request,
             resolve: cacheEntry.resolve,
             reject: cacheEntry.reject,
@@ -439,7 +439,7 @@ export class Client {
         this.nodesColl.requestStarted(request);
 
         // send request to hoprd
-        log.info('resending request %s', Request.prettyPrint(request));
+        log.info('resending request %s', IntReq.prettyPrint(request));
 
         // send segments sequentially
         for (const s of segments) {
@@ -449,9 +449,9 @@ export class Client {
 
     private resendSegment = (
         segment: Segment.Segment,
-        request: Request.Request,
+        request: IntReq.Request,
         entryNode: EntryNode.EntryNode,
-        cacheEntry: RequestCache.Entry,
+        cacheEntry: IntReqCache.Entry,
     ) => {
         const bef = performance.now();
         NodeAPI.sendMessage(
@@ -523,9 +523,9 @@ export class Client {
 
     private completeSegmentsEntry = (entry: SegmentCache.Entry) => {
         const firstSeg = entry.segments.get(0) as Segment.Segment;
-        const reqEntry = this.requestCache.get(firstSeg.requestId) as RequestCache.Entry;
+        const reqEntry = this.requestCache.get(firstSeg.requestId) as IntReqCache.Entry;
         const { request, session } = reqEntry;
-        RequestCache.remove(this.requestCache, request.id);
+        IntReqCache.remove(this.requestCache, request.id);
 
         const msgData = SegmentCache.toMessage(entry);
         const resMsgBytes = Utils.base64ToBytes(msgData);
@@ -546,14 +546,14 @@ export class Client {
         return this.responseSuccess(resUnbox.res, reqEntry);
     };
 
-    private responseError = (error: string, reqEntry: RequestCache.Entry) => {
+    private responseError = (error: string, reqEntry: IntReqCache.Entry) => {
         log.error('error extracting message', error);
         const request = reqEntry.request;
         this.nodesColl.requestFailed(request);
         return reqEntry.reject('Unable to process response');
     };
 
-    private responseSuccess = ({ resp }: IntResp.UnboxResponse, reqEntry: RequestCache.Entry) => {
+    private responseSuccess = ({ resp }: IntResp.UnboxResponse, reqEntry: IntReqCache.Entry) => {
         const { request, reject, resolve } = reqEntry;
         const responseTime = Math.round(performance.now() - request.startedAt);
         const stats = this.stats(responseTime, request, resp);
@@ -583,9 +583,9 @@ export class Client {
         }
     };
 
-    private removeRequest = (request: Request.Request) => {
+    private removeRequest = (request: IntReq.Request) => {
         this.nodesColl.requestFailed(request);
-        RequestCache.remove(this.requestCache, request.id);
+        IntReqCache.remove(this.requestCache, request.id);
         SegmentCache.remove(this.segmentCache, request.id);
         if (request.originalId) {
             this.redoRequests.delete(request.originalId);
@@ -611,7 +611,7 @@ export class Client {
         return 1;
     };
 
-    private stats = (responseTime: number, request: Request.Request, resp: Payload.RespPayload) => {
+    private stats = (responseTime: number, request: IntReq.Request, resp: Payload.RespPayload) => {
         const segDur = Math.round((request.lastSegmentEndedAt as number) - request.startedAt);
         if (
             request.measureLatency &&
