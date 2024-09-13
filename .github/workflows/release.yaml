@@ -1,0 +1,144 @@
+name: Close release
+
+on:
+    workflow_dispatch:
+        inputs:
+            release_type:
+                description: 'Next version type'
+                required: true
+                type: choice
+                default: 'patch'
+                options:
+                    - patch
+                    - minor
+                    - major
+
+concurrency:
+    group: release
+    cancel-in-progress: false
+
+jobs:
+    release:
+        name: Close release
+        runs-on: self-hosted-hoprnet-small
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: hoprnet/hopr-workflows/actions/setup-node-js@master
+              with:
+                  node-version: 20
+
+            - name: Setup GCP
+              id: gcp
+              uses: hoprnet/hopr-workflows/actions/setup-gcp@master
+              with:
+                  google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
+                  login-artifact-registry: 'true'
+
+            - name: Building
+              run: yarn build
+
+            - name: Linting
+              run: yarn lint:ci
+
+            - name: Formatting
+              run: yarn format:ci
+
+            - name: Testing
+              run: yarn test
+
+            - name: Generate changelog
+              id: changelog
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  echo "current_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package=${{ vars.NPM_PACKAGE_NAME }} --format=json 2> /dev/null | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" > pr_numbers.txt
+                  echo "### Changelog" > changelog.md
+                  echo "" >> changelog.md
+                  while read -r pr_number; do
+                    if [[ $pr_number == *"-"* ]]; then
+                      echo "Deleting obsolete artifact ${PACKAGE_VERSION}-pr.${pr_number}"
+                      gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package ${{ vars.NPM_PACKAGE_NAME }} "${PACKAGE_VERSION}-pr.${pr_number}"
+                    else
+                      gh pr view ${pr_number} --json number,title | jq -r '"- #\(.number) - \(.title)"' >> changelog.md
+                    fi
+                  done < pr_numbers.txt
+                  echo "" >> changelog.md
+                  echo "### Npm package" >> changelog.md
+                  echo "" >> changelog.md
+                  echo "[Download package](https://www.npmjs.com/package/${{ vars.NPM_PACKAGE_NAME }}/v/${PACKAGE_VERSION})" >> changelog.md
+                  cat changelog.md
+                  echo "release_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+              env:
+                  GH_TOKEN: ${{ github.token }}
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  body_path: changelog.md
+                  name: '${{ vars.NPM_PACKAGE_NAME }} - v${{ steps.changelog.outputs.release_version }}'
+                  tag_name: v${{ steps.changelog.outputs.release_version }}
+
+            - name: Unpublish PR versions
+              run: |
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package=${{ vars.NPM_PACKAGE_NAME }} --format=json 2> /dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}-pr.")).name' | sed 's/.*versions\///g' > pr_versions.txt
+                  while read -r version; do
+                    echo "Unpublishing PR version: $version"
+                    gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package ${{ vars.NPM_PACKAGE_NAME }} $version
+                  done < pr_versions.txt
+
+            - name: Publish to Google Artifact Registry
+              run: yarn publish --tag latest
+              env:
+                  NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+                  cache: 'yarn'
+                  cache-dependency-path: ./yarn.lock
+                  registry-url: https://registry.npmjs.org
+
+            - name: Publish to npm
+              run: |
+                  sed -i '/hoprassociation/d' .npmrc
+                  yarn publish --no-git-tag-version --tag latest
+                  git checkout .npmrc
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+            - name: Bump Version
+              id: bump
+              run: |
+                  npm version ${{ inputs.release_type }} --no-git-tag-version
+                  BUMP_VERSION=$(node -p "require('./package.json').version")
+                  echo "bump_version=${BUMP_VERSION}" >> $GITHUB_OUTPUT
+
+            - name: Create Pull Request
+              uses: peter-evans/create-pull-request@v6
+              with:
+                  token: ${{ secrets.GH_RUNNER_TOKEN }}
+                  commit-message: 'Bump to version ${{ steps.bump.outputs.bump_version }}'
+                  base: main
+                  title: 'Open release ${{ steps.bump.outputs.bump_version }}'
+                  body: 'The scope of this PR is to bump the new release ${{ steps.bump.outputs.bump_version }}'
+                  branch: bot/open-${{ inputs.release_type }}-${{ steps.bump.outputs.bump_version }}
+                  delete-branch: true
+                  assignees: ${{ github.actor }}
+                  team-reviewers: '@hoprnet/hopr-products-team'
+
+            - name: Notify new release
+              uses: zulip/github-actions-zulip/send-message@v1
+              with:
+                  api-key: ${{ secrets.ZULIP_API_KEY }}
+                  email: ${{ secrets.ZULIP_EMAIL }}
+                  organization-url: 'https://hopr.zulipchat.com'
+                  type: 'stream'
+                  to: 'Releases'
+                  topic: 'main'
+                  content: |
+                      I'm glad to inform that version **${{ vars.NPM_PACKAGE_NAME }}@${{ steps.changelog.outputs.current_version }}** has been released. See [ChangeLog](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.changelog.outputs.current_version }})

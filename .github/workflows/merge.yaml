@@ -1,0 +1,55 @@
+name: Merge PR
+
+on:
+    pull_request:
+        types:
+            - closed
+        branches:
+            - main
+
+concurrency:
+    group: merge
+    cancel-in-progress: false
+
+jobs:
+    merge:
+        name: Merge PR
+        runs-on: self-hosted-hoprnet-small
+        if: github.event.pull_request.merged == true
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: hoprnet/hopr-workflows/actions/setup-node-js@master
+              with:
+                  node-version: 20
+
+            - name: Setup GCP
+              id: gcp
+              uses: hoprnet/hopr-workflows/actions/setup-gcp@master
+              with:
+                  google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
+                  login-artifact-registry: 'true'
+
+            - name: Unpublish PR commit versions
+              run: |
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package=${{ vars.NPM_PACKAGE_NAME }} --format=json 2> /dev/null | jq -r ' .[] | select(.name | contains("-pr.${{ github.event.pull_request.number }}-")).name'  | sed 's/.*versions\///g' > pr_commit_versions.txt
+                  while read -r version; do
+                    echo "Unpublishing commit version: $version"
+                    gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package ${{ vars.NPM_PACKAGE_NAME }} $version
+                  done < pr_commit_versions.txt
+
+            - name: Publish alpha version
+              run: |
+                  BUILD_DATE=$(date +%Y%m%d%H%M%S)
+                  PR_VERSION=$(node -p "require('./package.json').version")-pr.${{ github.event.pull_request.number }}
+                  jq --arg version "${PR_VERSION}-${BUILD_DATE}" '.version = $version' package.json > temp.json
+                  mv temp.json package.json
+                  yarn publish --no-git-tag-version --tag next
+                  jq --arg version "${PR_VERSION}" '.version = $version' package.json > temp.json
+                  mv temp.json package.json
+                  yarn publish --no-git-tag-version --tag alpha
+              env:
+                  NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
