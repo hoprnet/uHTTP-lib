@@ -200,7 +200,10 @@ export class Client {
      *
      * Returns fetch typical Response object.
      */
-    public fetch = async (endpoint: URL | string, options?: FetchOptions): Promise<Response> => {
+    public fetch = async (
+        endpoint: Request | URL | string,
+        options?: FetchOptions,
+    ): Promise<Response> => {
         // throw on everything we are unable to do for now
         if (options) {
             for (const key of [
@@ -230,13 +233,15 @@ export class Client {
             throw err;
         });
 
+        const settings = this.resolveRequestParams(endpoint, options);
+
         const { entryNode, exitNode, counterOffset } = resNodes;
         const id = IntReqCache.generateId(this.requestCache);
         const exitPublicKey = Utils.hexStringToBytes(exitNode.pubKey);
         const reqOpts: IntReq.CreateOptions = {
             id,
             clientId: this.clientId,
-            provider: endpoint.toString(),
+            provider: settings.endpoint,
             entryPeerId: entryNode.id,
             exitPeerId: exitNode.id,
             exitPublicKey,
@@ -250,14 +255,14 @@ export class Client {
             reqOpts.reqRelayPeerId = resNodes.reqRelayPeerId;
             reqOpts.respRelayPeerId = resNodes.respRelayPeerId;
         }
-        if (options?.headers) {
-            reqOpts.headers = Utils.headersToRecord(options.headers);
+        if (settings.headers) {
+            reqOpts.headers = Utils.headersToRecord(settings.headers);
         }
-        if (options?.body) {
-            reqOpts.body = options.body;
+        if (settings.body) {
+            reqOpts.body = settings.body;
         }
-        if (options?.method) {
-            reqOpts.method = options.method;
+        if (settings.method) {
+            reqOpts.method = settings.method;
         }
 
         // adjust request externally
@@ -338,6 +343,36 @@ export class Client {
      */
     public restoreGlobalFetch = () => {
         globalThis.fetch = globalFetch;
+    };
+
+    private resolveRequestParams = (endpoint: Request | URL | string, options?: FetchOptions) => {
+        // check if we need to override request parameters from options
+        if (endpoint instanceof Request) {
+            const r = endpoint as Request;
+            const headers = new Headers(r.headers);
+            if (options?.headers instanceof Headers) {
+                options.headers.forEach(function (value, key) {
+                    headers.set(key, value);
+                });
+            } else if (options?.headers) {
+                Object.entries(options.headers).forEach(function ([key, value]) {
+                    headers.set(key, value);
+                });
+            }
+            return {
+                body: options?.body ?? r.body?.toString(),
+                endpoint: r.url,
+                headers,
+                method: options?.method ?? r.method,
+            };
+        }
+        // direct url fetch, take options as is
+        return {
+            body: options?.body,
+            endpoint: endpoint.toString(),
+            headers: options?.headers,
+            method: options?.method,
+        };
     };
 
     private sendSegment = (
