@@ -25,7 +25,7 @@
         "lint": "eslint --fix src/",
         "lint:ci": "eslint --max-warnings 0 src/",
         "test": "jest --coverage",
-        "bundle": "esbuild src/index.ts --bundle --minify --outfile=dist/uhttp-lib.min.mjs"
+        "bundle": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/uhttp-lib.min.mjs"
     },
     "devDependencies": {
         "@changesets/cli": "^2.27.5",
