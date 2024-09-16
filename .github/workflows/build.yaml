@@ -12,7 +12,9 @@ jobs:
     build-and-publish:
         name: Build and Publish
         runs-on: self-hosted-hoprnet-small
-
+        strategy:
+            matrix:
+                node-version: [20.x, 21.x, 22.x]
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -20,7 +22,7 @@ jobs:
             - name: Setup Node.js
               uses: hoprnet/hopr-workflows/actions/setup-node-js@master
               with:
-                  node-version: 20
+                  node-version: ${{ matrix.node-version }}
 
             - name: Setup GCP
               id: gcp
@@ -47,6 +49,7 @@ jobs:
               run: yarn test
 
             - name: Publish next version
+              if: matrix.node-version == vars.NODE_VERSION
               run: |
                   BUILD_DATE=$(date +%Y%m%d%H%M%S)
                   PR_VERSION=$(node -p "require('./package.json').version")-pr.${{ github.event.pull_request.number }}

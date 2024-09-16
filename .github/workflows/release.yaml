@@ -29,7 +29,7 @@ jobs:
             - name: Setup Node.js
               uses: hoprnet/hopr-workflows/actions/setup-node-js@master
               with:
-                  node-version: 20
+                  node-version: ${{ vars.NODE_VERSION }}
 
             - name: Setup GCP
               id: gcp
@@ -98,7 +98,7 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '20'
+                  node-version: ${{ vars.NODE_VERSION }}
                   cache: 'yarn'
                   cache-dependency-path: ./yarn.lock
                   registry-url: https://registry.npmjs.org
