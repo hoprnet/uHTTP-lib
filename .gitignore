@@ -26,3 +26,8 @@ coverage/
 
 # dependencies
 node_modules/
+
+# CI generated
+gha-creds-*.json
+changelog.md
+pr_numbers.txt

@@ -10,18 +10,6 @@ If you want to route network traffic through uHTTP, take a look at [Routing](ROU
 
 Follow [onboarding](./ONBOARDING.md) instructions to start hosting your own exit gateways.
 
-## Deployment
+## Deployment process
 
-### Staging
-
--   staging can be deployed from any branch
--   set a version tag manually in package.json with a suffix to differentiate it from the main versioning scheme (e.g. `-beta`)
--   run publish action with `beta` tag from that branch
-
-### Production
-
--   production must be deployed from main
--   run `yarn changeset version` to create the current changelog
--   run `yarn build` to update version info
--   commit everything, create a matching tag and push to main
--   run publish action with `latest` tag
+To contribute to this repository you will need to create a pull request. More information about the existing automated workflows can be found in [GitHub Actions](./.github/workflows/README.md)

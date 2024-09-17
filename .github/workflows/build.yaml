@@ -1,0 +1,67 @@
+name: Build
+
+on:
+    pull_request:
+        types: [synchronize, opened, reopened]
+
+concurrency:
+    group: build
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: Build
+        runs-on: self-hosted-hoprnet-small
+        strategy:
+            matrix:
+                node-version: [20.x, 22.x]
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: hoprnet/hopr-workflows/actions/setup-node-js@master
+              with:
+                  node-version: ${{ matrix.node-version }}
+
+            - name: Building
+              run: yarn build
+
+            - name: Linting
+              run: yarn lint:ci
+
+            - name: Formatting
+              run: yarn format:ci
+
+            - name: Testing
+              run: yarn test
+
+    publish:
+        name: Publish
+        runs-on: self-hosted-hoprnet-small
+        needs: build
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: hoprnet/hopr-workflows/actions/setup-node-js@master
+              with:
+                  node-version: ${{ vars.NODE_VERSION }}
+
+            - name: Setup GCP
+              id: gcp
+              uses: hoprnet/hopr-workflows/actions/setup-gcp@master
+              with:
+                  google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
+                  login-artifact-registry: 'true'
+
+            - name: Publish next version
+              run: |
+                  BUILD_DATE=$(date +%Y%m%d%H%M%S)
+                  PR_VERSION=$(node -p "require('./package.json').version")-pr.${{ github.event.pull_request.number }}
+                  jq --arg version "${PR_VERSION}-${BUILD_DATE}" '.version = $version' package.json > temp.json
+                  mv temp.json package.json
+                  yarn publish --no-git-tag-version --tag next
+              env:
+                  NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
