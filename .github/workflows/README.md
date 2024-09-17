@@ -26,3 +26,4 @@ This is a workflow triggered manually from Github Actions [Close Release](https:
 - Tag code
 - Add a changelog to the Github release with the list of PR merged during this release
 - Bumps the new version by opening a new PR
+- Sends a Zulip notification
