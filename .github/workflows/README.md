@@ -17,6 +17,14 @@ The published artifact will have the version x.y.z-pr.<PR_NUMBER>
 
 ## Close release
 
+This is a workflow triggered manually from Github Actions [Close Release](https://github.com/hoprnet/uHTTP-lib/actions/workflows/release.yaml) 
+
 Closes the release by publish the version in the latest release channel so it can be used as `@hoprnet/uhttp-lib@latest`
 
 The published artifact will have the version x.y.z
+
+The artifact is published in the internal Google Artifact Registry and in public NPM registry
+
+A github release is created and code is tagged automatically.
+
+A changelog is automatically added to the github release with the list of PR merged into this released
