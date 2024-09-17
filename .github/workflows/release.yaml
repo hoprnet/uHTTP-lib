@@ -141,4 +141,4 @@ jobs:
                   to: 'Releases'
                   topic: 'main'
                   content: |
-                      I'm glad to inform that version **${{ vars.NPM_PACKAGE_NAME }}@${{ steps.changelog.outputs.current_version }}** has been released. See [ChangeLog](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.changelog.outputs.current_version }})
+                      I'm thrilled to inform that version **${{ vars.NPM_PACKAGE_NAME }}@${{ steps.changelog.outputs.current_version }}** has been released. See [ChangeLog](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.changelog.outputs.current_version }})
