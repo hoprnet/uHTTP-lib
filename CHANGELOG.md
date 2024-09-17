@@ -1,5 +1,12 @@
 # @hoprnet/uhttp-lib
 
+## 3.7.0
+
+### Minor Changes
+
+-   fda4988: Enhance fetch API to take a request object as well
+-   fda4988: Enable bundling into one minified js library
+
 ## 3.6.0
 
 ### Minor Changes
