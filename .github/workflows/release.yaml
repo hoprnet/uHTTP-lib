@@ -55,13 +55,13 @@ jobs:
               run: |
                   PACKAGE_VERSION=$(node -p "require('./package.json').version")
                   echo "current_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
-                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package=${{ vars.NPM_PACKAGE_NAME }} --format=json 2> /dev/null | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" > pr_numbers.txt
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" > pr_numbers.txt
                   echo "### Changelog" > changelog.md
                   echo "" >> changelog.md
                   while read -r pr_number; do
                     if [[ $pr_number == *"-"* ]]; then
                       echo "Deleting obsolete artifact ${PACKAGE_VERSION}-pr.${pr_number}"
-                      gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package ${{ vars.NPM_PACKAGE_NAME }} "${PACKAGE_VERSION}-pr.${pr_number}"
+                      gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package "${{ vars.NPM_PACKAGE_NAME }}" "${PACKAGE_VERSION}-pr.${pr_number}"
                     else
                       gh pr view ${pr_number} --json number,title | jq -r '"- #\(.number) - \(.title)"' >> changelog.md
                     fi
@@ -84,10 +84,10 @@ jobs:
 
             - name: Unpublish PR versions
               run: |
-                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package=${{ vars.NPM_PACKAGE_NAME }} --format=json 2> /dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}-pr.")).name' | sed 's/.*versions\///g' > pr_versions.txt
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}-pr.")).name' | sed 's/.*versions\///g' > pr_versions.txt
                   while read -r version; do
                     echo "Unpublishing PR version: $version"
-                    gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package ${{ vars.NPM_PACKAGE_NAME }} $version
+                    gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package "${{ vars.NPM_PACKAGE_NAME }}" $version
                   done < pr_versions.txt
 
             - name: Publish to Google Artifact Registry

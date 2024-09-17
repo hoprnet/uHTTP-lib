@@ -9,8 +9,8 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    build-and-publish:
-        name: Build and Publish
+    build:
+        name: Build
         runs-on: self-hosted-hoprnet-small
         strategy:
             matrix:
@@ -24,13 +24,6 @@ jobs:
               with:
                   node-version: ${{ matrix.node-version }}
 
-            - name: Setup GCP
-              id: gcp
-              uses: hoprnet/hopr-workflows/actions/setup-gcp@master
-              with:
-                  google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
-                  login-artifact-registry: 'true'
-
             - name: Building
               run: yarn build
 
@@ -43,8 +36,27 @@ jobs:
             - name: Testing
               run: yarn test
 
+    publish:
+        name: Publish
+        runs-on: self-hosted-hoprnet-small
+        needs: build
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: hoprnet/hopr-workflows/actions/setup-node-js@master
+              with:
+                  node-version: ${{ vars.NODE_VERSION }}
+
+            - name: Setup GCP
+              id: gcp
+              uses: hoprnet/hopr-workflows/actions/setup-gcp@master
+              with:
+                  google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
+                  login-artifact-registry: 'true'
+
             - name: Publish next version
-              if: matrix.node-version == vars.NODE_VERSION
               run: |
                   BUILD_DATE=$(date +%Y%m%d%H%M%S)
                   PR_VERSION=$(node -p "require('./package.json').version")-pr.${{ github.event.pull_request.number }}
