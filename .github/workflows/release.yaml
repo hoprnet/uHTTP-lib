@@ -41,6 +41,9 @@ jobs:
             - name: Building
               run: yarn build
 
+            - name: Bundling
+              run: yarn bundle
+
             - name: Linting
               run: yarn lint:ci
 
