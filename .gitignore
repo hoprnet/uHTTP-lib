@@ -19,6 +19,7 @@ lerna-debug.log*
 
 # generated files
 build/
+dist/
 
 # test coverage
 coverage/
