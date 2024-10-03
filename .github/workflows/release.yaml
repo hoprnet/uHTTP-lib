@@ -37,6 +37,7 @@ jobs:
               with:
                   google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
                   login-artifact-registry: 'true'
+                  install-sdk: 'true'
 
             - name: Building
               run: yarn build
