@@ -126,10 +126,11 @@ jobs:
             - name: Bump Version
               id: bump
               run: |
+                  git fetch --all
                   git checkout main
                   git pull
                   npm version ${{ inputs.release_type }} --no-git-tag-version
-                  BUMP_VERSION=$(node -p "require('./package.json').version")
+                  BUMP_VERSION=$(jq -r '.version' package.json)
                   echo "bump_version=${BUMP_VERSION}" >> $GITHUB_OUTPUT
 
             - uses: EndBug/add-and-commit@v9
