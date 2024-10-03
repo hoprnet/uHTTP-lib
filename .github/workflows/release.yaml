@@ -86,14 +86,26 @@ jobs:
                   tag_name: v${{ steps.changelog.outputs.release_version }}
 
             - name: Unpublish PR versions
+              id: unpublish
               run: |
                   gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}-pr.")).name' | sed 's/.*versions\///g' > pr_versions.txt
                   while read -r version; do
                     echo "Unpublishing PR version: $version"
                     gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package "${{ vars.NPM_PACKAGE_NAME }}" $version
                   done < pr_versions.txt
+                  ALREADY_RELEASED=$(gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2>/dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}")).name' | grep '${{ steps.changelog.outputs.current_version }}$' | wc -l)
+                  if [ "$ALREADY_RELEASED" -eq 1 ]; then
+                    echo "Release already released in Artifact registry"
+                    echo "already_released=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "Release not found in Artifact registry"
+                    echo "already_released=false" >> $GITHUB_OUTPUT
+                  fi
+                  
+
 
             - name: Publish to Google Artifact Registry
+              if: steps.unpublish.outputs.already_released != 'true'
               run: yarn publish --tag latest
               env:
                   NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
