@@ -26,7 +26,7 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
               with:
-                  ref: main
+                  ref: main # if you want to use a different branch keep in mind that the bump version step will be affected
 
             - name: Setup Node.js
               uses: hoprnet/hopr-workflows/actions/setup-node-js@master
