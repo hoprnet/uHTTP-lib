@@ -13,6 +13,7 @@ lerna-debug.log*
 .env.test.local
 .env.production.local
 .env.local
+.npmrc
 
 # direnv cache
 .direnv/

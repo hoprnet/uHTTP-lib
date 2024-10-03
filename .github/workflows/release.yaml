@@ -25,6 +25,9 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  ref: main # if you want to use a different branch keep in mind that the bump version step will be affected
+                  token: '${{ secrets.GH_RUNNER_TOKEN }}'
 
             - name: Setup Node.js
               uses: hoprnet/hopr-workflows/actions/setup-node-js@master
@@ -37,6 +40,7 @@ jobs:
               with:
                   google-credentials: ${{ secrets.GOOGLE_HOPRASSOCIATION_CREDENTIALS_REGISTRY }}
                   login-artifact-registry: 'true'
+                  install-sdk: 'true'
 
             - name: Building
               run: yarn build
@@ -56,9 +60,9 @@ jobs:
             - name: Generate changelog
               id: changelog
               run: |
-                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  PACKAGE_VERSION=$(jq -r '.version' package.json)
                   echo "current_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
-                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" > pr_numbers.txt
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" | tee pr_numbers.txt
                   echo "### Changelog" > changelog.md
                   echo "" >> changelog.md
                   while read -r pr_number; do
@@ -86,14 +90,24 @@ jobs:
                   tag_name: v${{ steps.changelog.outputs.release_version }}
 
             - name: Unpublish PR versions
+              id: unpublish
               run: |
                   gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}-pr.")).name' | sed 's/.*versions\///g' > pr_versions.txt
                   while read -r version; do
                     echo "Unpublishing PR version: $version"
                     gcloud artifacts versions delete --delete-tags --quiet --repository=npm --location=europe-west3 --project=hoprassociation --package "${{ vars.NPM_PACKAGE_NAME }}" $version
                   done < pr_versions.txt
+                  ALREADY_RELEASED=$(gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2>/dev/null | jq -r ' .[] | select(.name | contains("${{ steps.changelog.outputs.current_version }}")).name' | grep '${{ steps.changelog.outputs.current_version }}$' | wc -l)
+                  if [ "$ALREADY_RELEASED" -eq 1 ]; then
+                    echo "Release already released in Artifact registry"
+                    echo "already_released=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "Release not found in Artifact registry"
+                    echo "already_released=false" >> $GITHUB_OUTPUT
+                  fi
 
             - name: Publish to Google Artifact Registry
+              if: steps.unpublish.outputs.already_released != 'true'
               run: yarn publish --tag latest
               env:
                   NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
@@ -108,31 +122,23 @@ jobs:
 
             - name: Publish to npm
               run: |
-                  sed -i '/hoprassociation/d' .npmrc
                   yarn publish --no-git-tag-version --tag latest
-                  git checkout .npmrc
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
             - name: Bump Version
               id: bump
               run: |
-                  npm version ${{ inputs.release_type }} --no-git-tag-version
-                  BUMP_VERSION=$(node -p "require('./package.json').version")
+                  npm version "${{ inputs.release_type }}" --no-git-tag-version
+                  BUMP_VERSION=$(jq -r '.version' package.json)
                   echo "bump_version=${BUMP_VERSION}" >> $GITHUB_OUTPUT
 
-            - name: Create Pull Request
-              uses: peter-evans/create-pull-request@v6
+            - uses: EndBug/add-and-commit@v9
               with:
-                  token: ${{ secrets.GH_RUNNER_TOKEN }}
-                  commit-message: 'Bump to version ${{ steps.bump.outputs.bump_version }}'
-                  base: main
-                  title: 'Open release ${{ steps.bump.outputs.bump_version }}'
-                  body: 'The scope of this PR is to bump the new release ${{ steps.bump.outputs.bump_version }}'
-                  branch: bot/open-${{ inputs.release_type }}-${{ steps.bump.outputs.bump_version }}
-                  delete-branch: true
-                  assignees: ${{ github.actor }}
-                  team-reviewers: '@hoprnet/hopr-products-team'
+                  add: 'package.json'
+                  new_branch: main
+                  message: 'Bump to version ${{ steps.bump.outputs.bump_version }}'
+                  pathspec_error_handling: exitImmediately
 
             - name: Notify new release
               uses: zulip/github-actions-zulip/send-message@v1
