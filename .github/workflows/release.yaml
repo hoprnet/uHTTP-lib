@@ -108,9 +108,7 @@ jobs:
 
             - name: Publish to npm
               run: |
-                  sed -i '/hoprassociation/d' .npmrc
                   yarn publish --no-git-tag-version --tag latest
-                  git checkout .npmrc
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
