@@ -25,6 +25,8 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  ref: main
 
             - name: Setup Node.js
               uses: hoprnet/hopr-workflows/actions/setup-node-js@master
@@ -126,9 +128,6 @@ jobs:
             - name: Bump Version
               id: bump
               run: |
-                  git fetch --all
-                  git checkout main
-                  git pull
                   npm version ${{ inputs.release_type }} --no-git-tag-version
                   BUMP_VERSION=$(jq -r '.version' package.json)
                   echo "bump_version=${BUMP_VERSION}" >> $GITHUB_OUTPUT
