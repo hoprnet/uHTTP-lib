@@ -27,6 +27,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   ref: main # if you want to use a different branch keep in mind that the bump version step will be affected
+                  token: "${{ secrets.GH_RUNNER_TOKEN }}"
 
             - name: Setup Node.js
               uses: hoprnet/hopr-workflows/actions/setup-node-js@master
@@ -135,8 +136,8 @@ jobs:
             - uses: EndBug/add-and-commit@v9
               with:
                   add: 'package.json'
-                  author_name: Ausiàs Armesto
-                  author_email: ausias.armesto@hoprnet.org
+                  # author_name: Hopr Bot
+                  # author_email: tech@hoprnet.org
                   # default_author: github_actor
                   new_branch: main
                   message: 'Bump to version ${{ steps.bump.outputs.bump_version }}'
