@@ -126,6 +126,8 @@ jobs:
             - name: Bump Version
               id: bump
               run: |
+                  git checkout main
+                  git pull
                   npm version ${{ inputs.release_type }} --no-git-tag-version
                   BUMP_VERSION=$(node -p "require('./package.json').version")
                   echo "bump_version=${BUMP_VERSION}" >> $GITHUB_OUTPUT
