@@ -103,8 +103,6 @@ jobs:
                     echo "Release not found in Artifact registry"
                     echo "already_released=false" >> $GITHUB_OUTPUT
                   fi
-                  
-
 
             - name: Publish to Google Artifact Registry
               if: steps.unpublish.outputs.already_released != 'true'
