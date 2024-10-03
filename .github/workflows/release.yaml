@@ -56,9 +56,10 @@ jobs:
             - name: Generate changelog
               id: changelog
               run: |
-                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  PACKAGE_VERSION=$(jq -r '.version' package.json)
                   echo "current_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
-                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json 2> /dev/null | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" > pr_numbers.txt
+                  set -x
+                  gcloud artifacts versions list --repository=npm --location=europe-west3 --project=hoprassociation --package="${{ vars.NPM_PACKAGE_NAME }}" --format=json | jq --arg version "${PACKAGE_VERSION}-pr." -r ' .[] | select(.name | contains($version)).name' | sed "s/.*versions\/${PACKAGE_VERSION}-pr.//g" | tee pr_numbers.txt
                   echo "### Changelog" > changelog.md
                   echo "" >> changelog.md
                   while read -r pr_number; do
@@ -75,6 +76,7 @@ jobs:
                   echo "[Download package](https://www.npmjs.com/package/${{ vars.NPM_PACKAGE_NAME }}/v/${PACKAGE_VERSION})" >> changelog.md
                   cat changelog.md
                   echo "release_version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+                  exit 1
               env:
                   GH_TOKEN: ${{ github.token }}
 
