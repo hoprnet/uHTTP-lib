@@ -1,11 +1,12 @@
 const fs = require('fs');
 const cheerio = require('cheerio');
-const uHTTP = require('../node_modules/@hoprnet/uhttp-lib/package.json');
+const uHTTP = require('../package.json');
 require('dotenv').config()
 
 main();
 
 function main() {
+    createFileStructure();
     const originalHTML = getIndexHTML();
     const elements = getScriptsAndLinks(originalHTML);
     const newHTML = prepareNewIndexHTML(originalHTML);
@@ -13,6 +14,22 @@ function main() {
     preparePersonalasiedStartingScript(elements);
 };
 
+function createFileStructure() {
+    console.log('Creating file structure')
+
+    try {
+        fs.mkdirSync(`./build/uHTTP`)
+    } catch (err) { }
+
+    fs.copyFileSync(`./node_modules/@hoprnet/uhttp-lib/service-worker/service-worker.js`, `./build/service-worker.js`);
+    console.log('/service-worker.js file copied')
+
+    fs.copyFileSync(`./node_modules/@hoprnet/uhttp-lib/service-worker/start-uHTTP.js`, `./build/uHTTP/start-uHTTP.js`);
+    console.log('/start-uHTTP.js file copied')
+
+    fs.copyFileSync(`./node_modules/@hoprnet/uhttp-lib/dist/uhttp-lib.min.mjs`, `./build/uHTTP/uhttp-lib.min.mjs`);
+    console.log('/uHTTP/uhttp-lib.min.mjs file copied')
+}
 
 function getIndexHTML() {
     console.log('Loading original index.html')
@@ -23,6 +40,7 @@ function saveIndexHTML(html) {
     console.log('Saving new uHTTP injected index.html')
     return fs.writeFileSync('./build/index.html', html);
 };
+
 
 function getScriptsAndLinks(originalHTML) {
     console.log('Grabbing all script and link tags')
@@ -85,14 +103,14 @@ function preparePersonalasiedStartingScript(elements) {
 function createAppendFunction(elements) {
     let output = `\nasync function appendPage() {\n`
 
-    elements.map((element, index) =>{
+    elements.map((element, index) => {
         output = output + `    const s${index} = document.createElement("${element.tag}");\n`
         const attributes = element.attributes;
         const attributeNames = Object.keys(attributes);
-        for(let i = 0; i < attributeNames.length; i++) {
+        for (let i = 0; i < attributeNames.length; i++) {
             const key = attributeNames[i];
             const value = attributes[key];
-                    output = output + `    s${index}.${key} = "${value}";\n`
+            output = output + `    s${index}.${key} = "${value}";\n`
         }
         output = output + `    document.querySelector('head').append(s${index});\n`
     })
