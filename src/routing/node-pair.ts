@@ -225,6 +225,42 @@ function requestInfo(np: NodePair, exitNode: ExitNode.ExitNode) {
     np.infoTimeouts.set(exitNode.id, timeout);
 }
 
+export function requestSegments(
+    np: NodePair,
+    exitPeerId: string,
+    requestId: string,
+    segmentNrs: number[],
+) {
+    const hasExitData = np.exitDatas.has(exitPeerId);
+    if (!hasExitData) {
+        return np.log.error(
+            'missing exit data for %s before requesting segment retransfer',
+            exitPeerId,
+        );
+    }
+    const rawSegs = `resg-${np.entryNode.id}-${np.hops ?? '_'}-${
+        np.forceManualRelaying ? 'r' : '_'
+    }-${requestId}-${segmentNrs.join(',')}`;
+    // truncate to max 500 chars
+    const idx = rawSegs.lastIndexOf(',');
+    const message = rawSegs.slice(0, idx);
+    NodeAPI.sendMessage(
+        {
+            ...np.entryNode,
+            hops: np.hops,
+            pinnedFetch: np.pinnedFetch,
+        },
+        {
+            recipient: exitPeerId,
+            tag: np.applicationTag,
+            message,
+        },
+    );
+    if (!np.fetchTimeout) {
+        np.fetchTimeout = setTimeout(() => fetchMessages(np), MessagesFetchInterval);
+    }
+}
+
 export function prettyPrint(np: NodePair): string {
     const segOngoing = np.entryData.segmentsOngoing.length;
     const segTotal = np.entryData.segmentsHistory.length;
