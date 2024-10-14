@@ -20,14 +20,14 @@
     "license": "GPL-3.0",
     "scripts": {
         "prebuild": "node -p \"'export default \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
-        "build": "yarn build:unbandled && build:minified-bundle",
+        "build": "yarn build:unbandled && yarn build:minified-bundle",
         "build:unbandled": "yarn prebuild && tsc",
         "build:minified-bundle": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/uhttp-lib.min.mjs",
         "format": "prettier --write src/ .github/ *.js *.ts *.json *.md",
         "format:ci": "prettier --check src/ .github/ *.js *.ts *.json *.md",
         "lint": "eslint --fix src/",
         "lint:ci": "eslint --max-warnings 0 src/",
-        "test": "jest --coverage",
+        "test": "jest --coverage"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "^1.5.4",
