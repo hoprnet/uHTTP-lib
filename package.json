@@ -10,6 +10,9 @@
         "dist",
         "service-worker"
     ],
+    "bin": {
+        "uhttp-post-build-react": "./service-worker/post-build-uHTTP.js"
+    },
     "keywords": [
         "hopr",
         "uHTTP"
