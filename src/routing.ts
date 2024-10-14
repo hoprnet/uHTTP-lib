@@ -523,8 +523,12 @@ export class Client {
 
     // handle missing segments reminder
     private onSegmentsReminder = (requestId: string, segmentNrs: number[]) => {
-        // request max 100 segments
-        const segReqs = segmentNrs.slice(100);
+        const cReq = this.requestCache.get(requestId);
+        if (!cReq) {
+            log.info('ignoring segments reminder on already handled request', requestId);
+            return;
+        }
+        this.nodesColl.retransferSegments(cReq.request, segmentNrs);
     };
 
     // handle incoming messages
