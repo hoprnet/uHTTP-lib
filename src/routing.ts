@@ -548,8 +548,9 @@ export class Client {
                     break;
                 case 'added-to-request':
                     log.verbose(
-                        'inserted new segment to existing requestId',
+                        'inserted new segment to existing requestId: %s [missing: %d]',
                         Segment.prettyPrint(segment),
+                        segment.totalCount - (cacheRes.entry as SegmentCache.Entry).segments.size,
                     );
                     break;
             }
