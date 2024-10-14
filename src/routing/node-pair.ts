@@ -15,7 +15,7 @@ import * as RoutingUtils from './utils';
 
 export type MessageListener = (messages: NodeAPI.Message[]) => void;
 
-const MessagesFetchInterval = 333; // ms
+const MessagesFetchInterval = 167; // ms
 const InfoResponseTimeout = 10e3; // 10s
 
 const RelayNodesCompatVersions = ['2.1'];
