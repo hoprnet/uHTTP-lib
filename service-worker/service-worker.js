@@ -21,7 +21,7 @@ const activateEvent = () => {
         uClient = new Routing.Client(uClientId, {
             forceZeroHop,
             discoveryPlatformEndpoint,
-            timeout: 10000,
+            timeout: 60_000,
         });
         const isReady = await uClient.isReady(60_000);
         console.log('uHTTP isReady', isReady);
