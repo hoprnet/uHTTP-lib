@@ -4,16 +4,16 @@ const broadcastChannel = new BroadcastChannel("sw-uhttp");
 
 const installEvent = () => {
     self.addEventListener('install', (event) => {
-        console.log('install');
-        //    event.waitUntil(self.skipWaiting()); // Activate worker immediately
+        console.log('[uHTTP SW] Install event');
+        event.waitUntil(self.skipWaiting()); // Activate worker immediately
     });
 };
 installEvent();
 
 const activateEvent = () => {
     self.addEventListener('activate', async (event) => {
-        console.log('activate');
-    //    event.waitUntil(self.clients.claim()); // Become available to all pages
+        console.log('[uHTTP SW] Activate event');
+        event.waitUntil(self.clients.claim()); // Become available to all pages
         const params = new URLSearchParams(self.location.search);
         const uClientId = params.get('uClientId');
         const forceZeroHop = params.get('uForceZeroHop');
@@ -24,14 +24,12 @@ const activateEvent = () => {
             timeout: 60_000,
         });
         const isReady = await uClient.isReady(60_000);
-        console.log('uHTTP isReady', isReady);
+        console.log(`[uHTTP SW] Service worker activated. uHTTP is ${isReady ? 'ready' : 'NOT ready'}`);
         if(isReady) {
             broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
         } else {
-            console.error('Something is wrong, reloading the page');
             window.location.reload();
         }
-        console.log('service worker activated');
     });
 };
 activateEvent();
@@ -78,9 +76,9 @@ fetchEvent();
 
 
 broadcastChannel.addEventListener("message", async function eventListener(event) {
+    if(!uClient) console.warn('[SW] uHTTP is undefined');
     if(event.data.message === "uHTTP-ready?" && uClient) {
         const isReady = await uClient.isReady(10_000);
-        console.log('uHTTP isReady', isReady);
         if(isReady) {
             broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
         }
