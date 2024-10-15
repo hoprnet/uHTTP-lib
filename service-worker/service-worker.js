@@ -16,7 +16,7 @@ const activateEvent = () => {
         event.waitUntil(self.clients.claim()); // Become available to all pages
         const params = new URLSearchParams(self.location.search);
         const uClientId = params.get('uClientId');
-        const forceZeroHop = params.get('uForceZeroHop');
+        const forceZeroHop = params.get('uForceZeroHop') === 'true';
         const discoveryPlatformEndpoint = params.get('discoveryPlatformEndpoint');
         uClient = new Routing.Client(uClientId, {
             forceZeroHop,
