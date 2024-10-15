@@ -21,7 +21,11 @@ export function init(remainingSegmentReminder: RemainingSegmentReminder): Cache 
     };
 }
 
-const SegmentReminderTimeout = 222; // make it slightly bigger than the fetch interval so it wont trigger on regular updates
+// give it some time before requesting missing segments to give the node some time to breathe
+const InitialSegmentReminderTimeout = 15000;
+// subsequent segments will be limited by the request body size of 400 bytes not being able to contains all segments
+// so we can ticker faster here
+const SubsequentSegmentReminderTimeout = 2200;
 
 /**
  * Handles incoming segments against the cache.
@@ -49,9 +53,8 @@ export function incoming(cache: Cache, segment: Segment) {
     const cEntry = cache.cache.get(requestId);
     if (cEntry) {
         const entry = cEntry as Entry;
-        // do nothing if already cached, except resetting reminder timer
+        // do nothing if already cached
         if (entry.segments.has(segment.nr)) {
-            scheduleReminder(cache, entry);
             return { res: 'already-cached' };
         }
 
@@ -107,8 +110,12 @@ export function remove({ cache }: Cache, requestId: string) {
 }
 
 function scheduleReminder(cache: Cache, entry: Entry) {
+    const timeout = entry.reminder
+        ? SubsequentSegmentReminderTimeout
+        : InitialSegmentReminderTimeout;
+    console.log('scheduling reminder with timeout', timeout);
     clearTimeout(entry.reminder);
-    entry.reminder = setTimeout(() => remind(cache, entry.requestId), SegmentReminderTimeout);
+    entry.reminder = setTimeout(() => remind(cache, entry.requestId), timeout);
 }
 
 function remind(cache: Cache, requestId: string) {
@@ -117,6 +124,7 @@ function remind(cache: Cache, requestId: string) {
         const entry = cEntry as Entry;
         const missing = missingSegmentNrs(entry);
         if (missing.length > 0) {
+            entry.reminder = undefined;
             scheduleReminder(cache, entry);
             cache.remainingSegmentReminder(entry.requestId, missing);
         }

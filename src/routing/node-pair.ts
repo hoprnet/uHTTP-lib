@@ -15,7 +15,7 @@ import * as RoutingUtils from './utils';
 
 export type MessageListener = (messages: NodeAPI.Message[]) => void;
 
-const MessagesFetchInterval = 167; // ms
+const MessagesFetchInterval = 333; // ms
 const InfoResponseTimeout = 10e3; // 10s
 
 const RelayNodesCompatVersions = ['2.1'];
@@ -238,10 +238,11 @@ export function requestSegments(
             exitPeerId,
         );
     }
-    const rawSegs = `resg-${np.entryNode.id}-${np.hops ?? '_'}-${requestId}-${segmentNrs.join(',')}`;
+    const rawSegs = `resg;${np.entryNode.id};${np.hops ?? '_'};${requestId};${segmentNrs.join(',')}`;
     // truncate to max 500 chars
-    const idx = rawSegs.lastIndexOf(',');
-    const message = rawSegs.slice(0, idx);
+    const idx = rawSegs.lastIndexOf(',', 400);
+    const message = idx > 0 ? rawSegs.slice(0, idx) : rawSegs;
+    np.log.verbose('requesting missing segments:', message.length, message);
     NodeAPI.sendMessage(
         {
             ...np.entryNode,
@@ -327,6 +328,7 @@ function fetchMessages(np: NodePair) {
     const bef = performance.now();
     NodeAPI.retrieveMessages({ ...np.entryNode, pinnedFetch: np.pinnedFetch }, np.applicationTag)
         .then(({ messages }) => {
+            np.log.verbose('got %d messages', messages.length);
             const lat = Math.round(performance.now() - bef);
             np.entryData.fetchMessagesSuccesses++;
             np.entryData.fetchMessagesLatencies.push(lat);

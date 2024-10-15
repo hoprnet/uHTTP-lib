@@ -211,7 +211,6 @@ export class NodesCollector {
                 this.nodePairs.set(NodePair.id(np), np);
             }
         }
-
         this.removeRedundant();
 
         // ping all nodes

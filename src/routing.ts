@@ -523,6 +523,7 @@ export class Client {
 
     // handle missing segments reminder
     private onSegmentsReminder = (requestId: string, segmentNrs: number[]) => {
+        log.verbose('missing segments reminder for request %s: %o', requestId, segmentNrs);
         const cReq = this.requestCache.get(requestId);
         if (!cReq) {
             log.info('ignoring segments reminder on already handled request', requestId);
