@@ -301,10 +301,12 @@ export class Client {
             log.info('sending request %s', IntReq.prettyPrint(request));
 
             // queue segment sending for all of them
-            for (const s of segments) {
-                this.nodesColl.segmentStarted(request, s);
-                this.sendSegment(request, s, entryNode, entry);
-            }
+            segments.forEach((s, idx) => {
+                setTimeout(() => {
+                    this.nodesColl.segmentStarted(request, s);
+                    this.sendSegment(request, s, entryNode, entry);
+                }, idx);
+            });
         });
     };
 
@@ -476,10 +478,12 @@ export class Client {
         // send request to hoprd
         log.info('resending request %s', IntReq.prettyPrint(request));
 
-        // send segments sequentially
-        for (const s of segments) {
-            this.resendSegment(s, request, entryNode, newCacheEntry);
-        }
+        // queue segment sending for all of them
+        segments.forEach((s, idx) => {
+            setTimeout(() => {
+                this.resendSegment(s, request, entryNode, newCacheEntry);
+            }, idx);
+        });
     };
 
     private resendSegment = (
