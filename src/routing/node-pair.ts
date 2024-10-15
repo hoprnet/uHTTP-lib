@@ -238,9 +238,7 @@ export function requestSegments(
             exitPeerId,
         );
     }
-    const rawSegs = `resg-${np.entryNode.id}-${np.hops ?? '_'}-${
-        np.forceManualRelaying ? 'r' : '_'
-    }-${requestId}-${segmentNrs.join(',')}`;
+    const rawSegs = `resg-${np.entryNode.id}-${np.hops ?? '_'}-${requestId}-${segmentNrs.join(',')}`;
     // truncate to max 500 chars
     const idx = rawSegs.lastIndexOf(',');
     const message = rawSegs.slice(0, idx);
