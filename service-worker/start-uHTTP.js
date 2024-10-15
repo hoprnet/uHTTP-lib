@@ -7,7 +7,7 @@ const broadcastChannel = new BroadcastChannel("sw-uhttp");
 let appended = false;
 
 
-//checkIfuHTTPIsReady();
+checkIfuHTTPIsReady();
 registerServiceWorker();
 
 async function checkIfuHTTPIsReady() {
@@ -20,7 +20,7 @@ async function checkIfuHTTPIsReady() {
     })
 
     while (!appended) {
-        broadcastChannel.postMessage({ message: "uHTTP-ready?" })
+        broadcastChannel.postMessage({ message: "uHTTP-ready?" });
         await new Promise(r => setTimeout(r, 1_000));
     }
 }
@@ -122,11 +122,6 @@ async function registerServiceWorker(tryOnce = false) {
     }
 
     console.info('[uHTTP] Sercice worker is controlling and active');
-    if (!appended) {
-        console.log("[uHTTP] uHTTP is ready. Appending page now to index.html");
-        appendPage();
-        appended = true;
-    }
     return serviceWorker;
 
 }
