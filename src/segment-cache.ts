@@ -50,7 +50,7 @@ export function incoming(cache: Cache, segment: Segment) {
             return { res: 'complete', entry };
         }
 
-        return { res: 'added-to-request' };
+        return { res: 'added-to-request', entry };
     }
 
     // creating new entry
