@@ -1,6 +1,6 @@
 {
     "name": "@hoprnet/uhttp-lib",
-    "version": "3.7.3-beta.4",
+    "version": "3.7.3-beta.5",
     "description": "u(nlinked)HTTP library",
     "author": "HOPR Association",
     "main": "./build/index.js",
@@ -11,7 +11,7 @@
         "service-worker"
     ],
     "bin": {
-        "uhttp-post-build-react": "node ./service-worker/post-build-uHTTP.js"
+        "uhttp-post-build-react": "./service-worker/post-build-uHTTP.js"
     },
     "keywords": [
         "hopr",
