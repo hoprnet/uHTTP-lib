@@ -23,13 +23,13 @@ const activateEvent = () => {
             discoveryPlatformEndpoint,
             timeout: 60_000,
         });
-        const isReady = await uClient.isReady(60_000);
-        console.log(`[uHTTP SW] Service worker activated. uHTTP is ${isReady ? 'ready' : 'NOT ready'}`);
-        if(isReady) {
-            broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
-        } else {
-            window.location.reload();
-        }
+        // const isReady = await uClient.isReady(60_000);
+        // console.log(`[uHTTP SW] Service worker activated. uHTTP is ${isReady ? 'ready' : 'NOT ready'}`);
+        // if(isReady) {
+        //     broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
+        // } else {
+        //     window.location.reload();
+        // }
     });
 };
 activateEvent();
@@ -75,12 +75,12 @@ function reqLog(request) {
 fetchEvent();
 
 
-broadcastChannel.addEventListener("message", async function eventListener(event) {
-    if(!uClient) console.warn('[SW] uHTTP is undefined');
-    if(event.data.message === "uHTTP-ready?" && uClient) {
-        const isReady = await uClient.isReady(10_000);
-        if(isReady) {
-            broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
-        }
-    }
-})
+// broadcastChannel.addEventListener("message", async function eventListener(event) {
+//     if(!uClient) console.warn('[SW] uHTTP is undefined');
+//     if(event.data.message === "uHTTP-ready?" && uClient) {
+//         const isReady = await uClient.isReady(10_000);
+//         if(isReady) {
+//             broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
+//         }
+//     }
+// })

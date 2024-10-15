@@ -7,7 +7,7 @@ const broadcastChannel = new BroadcastChannel("sw-uhttp");
 let appended = false;
 
 
-checkIfuHTTPIsReady();
+//checkIfuHTTPIsReady();
 registerServiceWorker();
 
 async function checkIfuHTTPIsReady() {
@@ -37,7 +37,6 @@ async function registerServiceWorker(tryOnce = false) {
 
     const url = `${window.location.protocol}//${window.location.host}/service-worker.js?uClientId=${encodeURI(uClientId)}&uForceZeroHop=${uForceZeroHop}&discoveryPlatformEndpoint=${encodeURI(discoveryPlatformEndpoint)}&uHTTPVersion=${encodeURI(uHTTPVersion)}`;
 
-    console.info('Registering worker');
     const registration = await navigator.serviceWorker.register(url, {
         type: 'module',
         scope: '/',
@@ -123,6 +122,11 @@ async function registerServiceWorker(tryOnce = false) {
     }
 
     console.info('[uHTTP] Sercice worker is controlling and active');
+    if (!appended) {
+        console.log("[uHTTP] uHTTP is ready. Appending page now to index.html");
+        appendPage();
+        appended = true;
+    }
     return serviceWorker;
 
 }
