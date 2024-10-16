@@ -139,7 +139,7 @@ export class TimeoutError extends Error { }
 export function timeout(ms, promise) {
     return new Promise((resolve, reject) => {
         const timer = setTimeout(() => {
-            reject(new TimeoutError);
+            reject(new TimeoutError());
         }, ms);
 
         promise.then((result) => {
