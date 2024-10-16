@@ -124,6 +124,8 @@ function remind(cache: Cache, requestId: string) {
         const entry = cEntry as Entry;
         const missing = missingSegmentNrs(entry);
         if (missing.length > 0) {
+            clearTimeout(entry.reminder);
+            // start with long initial timeout after requesting missing segments
             entry.reminder = undefined;
             scheduleReminder(cache, entry);
             cache.remainingSegmentReminder(entry.requestId, missing);
