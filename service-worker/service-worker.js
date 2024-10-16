@@ -51,6 +51,7 @@ const fetchEvent = () => {
                 })
                 .catch((error) => {
                     console.error(`[uHTTP] Error to ${logLine}`, error);
+                    return new Response(`uHTTP Error: Service unavailable for this request. ${error}`, { status: 503 });
                 });
             e.respondWith(chain);
         } else {
