@@ -28,7 +28,9 @@ const activateEvent = () => {
         if(isReady) {
             broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
         } else {
-            window.location.reload();
+            self.clients.matchAll({ type: 'window' }).then(clients => {
+               clients.forEach(client => client.navigate(client.url));
+            });
         }
     });
 };
@@ -37,25 +39,26 @@ activateEvent();
 const fetchEvent = () => {
     self.addEventListener('fetch', (e) => {
         const logLine = reqLog(e.request);
-        const url = new URL(e.request.url);
-        // only uhttp requests to 3rd party
-        if (url.origin !== self.location.origin) {
+        const reqUrl = new URL(e.request.url);
+        const reqHostname = reqUrl.hostname;
+
+        if (isHostnamePublic(reqHostname)) {
+            console.info(`[uHTTP] Request to ${reqHostname} is using uHTTP`);
             const chain = uClient
                 .fetch(e.request)
                 .then((res) => {
-                    console.log(`uHTTP response to ${logLine}:`, res);
                     return res;
                 })
-                .catch((ex) => {
-                    console.log(`uHTTP error to ${logLine}`, ex);
-                    // fallback to default fetch
-                    return fetch(e.request).then((res) => res);
+                .catch((error) => {
+                    console.info(`[uHTTP] Error to ${logLine}`, error);
                 });
             e.respondWith(chain);
         } else {
+            console.info(`[uHTTP] Request to ${reqHostname} is NOT routed through uHTTP as it goes to privte IP range`);
             const chain = fetch(e.request).then((res) => res);
             e.respondWith(chain);
         }
+
     });
 };
 
@@ -70,6 +73,20 @@ function reqLog(request) {
         extra.push(request.body);
     }
     return `${request.url}[${extra.join('|')}]`;
+}
+
+function isHostnamePublic(hostname){
+    let isPublic = true;
+    if (/^(10)\.(.*)\.(.*)\.(.*)$/.test(hostname)){ // 10.x.x.x
+        isPublic = false;
+    } else if (/^(172)\.(1[6-9]|2[0-9]|3[0-1])\.(.*)\.(.*)$/.test(hostname)){ // 172.16.x.x - 172.31.255.255
+        isPublic = false;
+    } else if (/^(192)\.(168)\.(.*)\.(.*)$/.test(hostname)){ // 192.168.x.x
+        isPublic = false;
+    } else if (hostname === 'localhost' || hostname === '127.0.0.1'){ // localhost
+        isPublic = false;
+    }
+    return isPublic;
 }
 
 fetchEvent();
