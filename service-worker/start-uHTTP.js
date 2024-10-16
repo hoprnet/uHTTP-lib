@@ -46,7 +46,7 @@ async function registerServiceWorker(tryOnce = false) {
     console.info('[uHTTP] Service worker is registered.', registeredWorker);
     if (registeredWorker?.scriptURL != url) {
         await registration.update();
-        console.log(`[uHTTP] uHTTP service worker is updated now.`);
+        console.log(`[uHTTP] uHTTP service worker was updated.`);
     }
 
     let serviceReg = await navigator.serviceWorker.ready;
