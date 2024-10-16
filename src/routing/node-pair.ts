@@ -225,6 +225,41 @@ function requestInfo(np: NodePair, exitNode: ExitNode.ExitNode) {
     np.infoTimeouts.set(exitNode.id, timeout);
 }
 
+export function requestSegments(
+    np: NodePair,
+    exitPeerId: string,
+    requestId: string,
+    segmentNrs: number[],
+) {
+    const hasExitData = np.exitDatas.has(exitPeerId);
+    if (!hasExitData) {
+        return np.log.error(
+            'missing exit data for %s before requesting segment retransfer',
+            exitPeerId,
+        );
+    }
+    const rawSegs = `resg;${np.entryNode.id};${np.hops ?? '_'};${requestId};${segmentNrs.join(',')}`;
+    // truncate to max 500 chars
+    const idx = rawSegs.lastIndexOf(',', 400);
+    const message = idx > 0 ? rawSegs.slice(0, idx) : rawSegs;
+    np.log.verbose('requesting missing segments:', message.length, message);
+    NodeAPI.sendMessage(
+        {
+            ...np.entryNode,
+            hops: np.hops,
+            pinnedFetch: np.pinnedFetch,
+        },
+        {
+            recipient: exitPeerId,
+            tag: np.applicationTag,
+            message,
+        },
+    );
+    if (!np.fetchTimeout) {
+        np.fetchTimeout = setTimeout(() => fetchMessages(np), MessagesFetchInterval);
+    }
+}
+
 export function prettyPrint(np: NodePair): string {
     const segOngoing = np.entryData.segmentsOngoing.length;
     const segTotal = np.entryData.segmentsHistory.length;
@@ -293,6 +328,7 @@ function fetchMessages(np: NodePair) {
     const bef = performance.now();
     NodeAPI.retrieveMessages({ ...np.entryNode, pinnedFetch: np.pinnedFetch }, np.applicationTag)
         .then(({ messages }) => {
+            np.log.verbose('got %d messages', messages.length);
             const lat = Math.round(performance.now() - bef);
             np.entryData.fetchMessagesSuccesses++;
             np.entryData.fetchMessagesLatencies.push(lat);
