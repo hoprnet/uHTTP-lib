@@ -8,7 +8,7 @@ import * as IntResp from './response';
 import * as Result from './result';
 import * as RoutingUtils from './routing/utils';
 import * as Segment from './segment';
-import * as SegmentCache from './routing/segment-cache';
+import * as SegmentCache from './segment-cache';
 import * as Utils from './utils';
 import Version from './version';
 
@@ -154,7 +154,7 @@ export class Client {
             );
         }
         this.requestCache = IntReqCache.init();
-        this.segmentCache = SegmentCache.init();
+        this.segmentCache = SegmentCache.init(this.onSegmentsReminder);
         this.hops = this.determineHops(this.settings.forceZeroHop);
         this.nodesColl = new NodesCollector.NodesCollector(
             globalFetch,
@@ -519,6 +519,17 @@ export class Client {
                 this.removeRequest(request);
                 return cacheEntry.reject('Sending message failed');
             });
+    };
+
+    // handle missing segments reminder
+    private onSegmentsReminder = (requestId: string, segmentNrs: number[]) => {
+        log.verbose('missing segments reminder for request %s: %o', requestId, segmentNrs);
+        const cReq = this.requestCache.get(requestId);
+        if (!cReq) {
+            log.info('ignoring segments reminder on already handled request', requestId);
+            return;
+        }
+        this.nodesColl.retransferSegments(cReq.request, segmentNrs);
     };
 
     // handle incoming messages
