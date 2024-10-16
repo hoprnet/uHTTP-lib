@@ -144,6 +144,15 @@ export class NodesCollector {
         log.warn('failed %s on %s', Segment.prettyPrint(seg), NodePair.prettyPrint(np));
     };
 
+    public retransferSegments = (req: Request.Request, segmentNrs: number[]) => {
+        const np = this.nodePairs.get(req.entryPeerId);
+        if (!np) {
+            log.error('cannot find nodepair for segment retransfer');
+            return;
+        }
+        NodePair.requestSegments(np, req.exitPeerId, req.id, segmentNrs);
+    };
+
     private fetchRoutes = (pinnedFetch: typeof globalThis.fetch) => {
         DPapi.getNodes(
             {
@@ -202,7 +211,6 @@ export class NodesCollector {
                 this.nodePairs.set(NodePair.id(np), np);
             }
         }
-
         this.removeRedundant();
 
         // ping all nodes
