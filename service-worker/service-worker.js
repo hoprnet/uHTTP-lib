@@ -50,11 +50,11 @@ const fetchEvent = () => {
                     return res;
                 })
                 .catch((error) => {
-                    console.info(`[uHTTP] Error to ${logLine}`, error);
+                    console.error(`[uHTTP] Error to ${logLine}`, error);
                 });
             e.respondWith(chain);
         } else {
-            console.info(`[uHTTP] Request to ${reqHostname} is NOT routed through uHTTP as it goes to privte IP range`);
+            console.warn(`[uHTTP] Request to ${reqHostname} is NOT routed through uHTTP as it goes to privte IP range`);
             const chain = fetch(e.request).then((res) => res);
             e.respondWith(chain);
         }
