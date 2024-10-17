@@ -5,6 +5,8 @@ const cheerio = require('cheerio');
 const { version: uHTTPVersion } = require('../package.json');
 require('dotenv').config();
 
+const buildFolderPath = process.env.buildFolderPath || './build';
+
 main();
 
 function main() {
@@ -18,8 +20,6 @@ function main() {
 
 function createFileStructure() {
     console.log('Creating file structure');
-
-    const buildFolderPath = process.env.buildFolderPath || './build';
 
     fs.mkdirSync(`${buildFolderPath}/uHTTP`, { recursive: true });
 
