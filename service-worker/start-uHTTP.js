@@ -2,34 +2,34 @@ const uClientId = 'REPLACE_uClientId';
 const uForceZeroHop = REPLACE_uForceZeroHop;
 const discoveryPlatformEndpoint = 'REPLACE_discoveryPlatformEndpoint';
 const uHTTPVersion = 'REPLACE_uHTTPVersion';
-const broadcastChannel = new BroadcastChannel("sw-uhttp");
+const broadcastChannel = new BroadcastChannel('sw-uhttp');
 
 let appended = false;
-
 
 checkIfuHTTPIsReady();
 registerServiceWorker();
 
 async function checkIfuHTTPIsReady() {
-    broadcastChannel.addEventListener("message", function eventListener(event) {
-        if (!appended && event.data.message === "uHTTP-is-ready") {
-            console.log("[uHTTP] uHTTP is ready. Appending page now to index.html");
+    broadcastChannel.addEventListener('message', function eventListener(event) {
+        if (!appended && event.data.message === 'uHTTP-is-ready') {
+            console.log('[uHTTP] uHTTP is ready. Appending page now to index.html');
             appendPage();
             appended = true;
         }
-    })
+    });
 
     while (!appended) {
-        broadcastChannel.postMessage({ message: "uHTTP-ready?" });
-        await new Promise(r => setTimeout(r, 1_000));
+        broadcastChannel.postMessage({ message: 'uHTTP-ready?' });
+        await new Promise((r) => setTimeout(r, 1_000));
     }
 }
 
-
 async function registerServiceWorker(tryOnce = false) {
     if (!('serviceWorker' in navigator)) {
-        const errorMessage = document.createElement("div");
-        const content = document.createTextNode("Service worker is not supported on this browser. Unable to load the website.");
+        const errorMessage = document.createElement('div');
+        const content = document.createTextNode(
+            'Service worker is not supported on this browser. Unable to load the website.',
+        );
         errorMessage.appendChild(content);
         document.querySelector('body').append(errorMessage);
         throw new Error('Service worker not supported');
@@ -71,7 +71,6 @@ async function registerServiceWorker(tryOnce = false) {
     }
     */
 
-
     let serviceWorker = serviceReg.active || serviceReg.waiting || serviceReg.installing;
     if (!serviceWorker) {
         console.info('[uHTTP] No service worker on registration, getting registration again');
@@ -93,21 +92,30 @@ async function registerServiceWorker(tryOnce = false) {
     }
 
     if (serviceWorker.state != 'activated') {
-        console.info('[uHTTP] Service worker is controlling, but not active yet, waiting on event. State =', serviceWorker.state);
+        console.info(
+            '[uHTTP] Service worker is controlling, but not active yet, waiting on event. State =',
+            serviceWorker.state,
+        );
         try {
             // timeout is adjustable, but you do want one in case the statechange, 1s seems to do the job well
             // doesn't fire / with the wrong state because it gets queued,
             // see ServiceWorker.onstatechange MDN docs.
-            await timeout(1000, new Promise((resolve) => {
-                serviceWorker.addEventListener('statechange', (e) => {
-                    if (e.target.state == 'activated') resolve();
-                });
-            }));
+            await timeout(
+                1000,
+                new Promise((resolve) => {
+                    serviceWorker.addEventListener('statechange', (e) => {
+                        if (e.target.state == 'activated') resolve();
+                    });
+                }),
+            );
         } catch (err) {
             if (err instanceof TimeoutError) {
                 if (serviceWorker.state != 'activated') {
                     if (tryOnce) {
-                        console.info('[uHTTP] Worker is still not active after 1s. state =', serviceWorker.state);
+                        console.info(
+                            '[uHTTP] Worker is still not active after 1s. state =',
+                            serviceWorker.state,
+                        );
                         throw new Error('failed to activate service worker');
                     } else {
                         console.info('[uHTTP] Worker is still not active after 1s, retrying once');
@@ -123,10 +131,9 @@ async function registerServiceWorker(tryOnce = false) {
 
     console.info('[uHTTP] Sercice worker is controlling and active');
     return serviceWorker;
-
 }
 
-export class TimeoutError extends Error { }
+export class TimeoutError extends Error {}
 
 /**
  * Run promise but reject after some timeout.
@@ -142,14 +149,15 @@ export function timeout(ms, promise) {
             reject(new TimeoutError());
         }, ms);
 
-        promise.then((result) => {
-            clearTimeout(timer);
-            resolve(result);
-        }, (error) => {
-            clearTimeout(timer);
-            reject(error);
-        });
-    })
+        promise.then(
+            (result) => {
+                clearTimeout(timer);
+                resolve(result);
+            },
+            (error) => {
+                clearTimeout(timer);
+                reject(error);
+            },
+        );
+    });
 }
-
-

@@ -1,6 +1,6 @@
 import { Routing } from '/uHTTP/uhttp-lib.min.mjs';
 let uClient;
-const broadcastChannel = new BroadcastChannel("sw-uhttp");
+const broadcastChannel = new BroadcastChannel('sw-uhttp');
 
 const installEvent = () => {
     self.addEventListener('install', (event) => {
@@ -24,12 +24,14 @@ const activateEvent = () => {
             timeout: 60_000,
         });
         const isReady = await uClient.isReady(60_000);
-        console.log(`[uHTTP SW] Service worker activated. uHTTP is ${isReady ? 'ready' : 'NOT ready'}`);
-        if(isReady) {
-            broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
+        console.log(
+            `[uHTTP SW] Service worker activated. uHTTP is ${isReady ? 'ready' : 'NOT ready'}`,
+        );
+        if (isReady) {
+            broadcastChannel.postMessage({ message: 'uHTTP-is-ready' });
         } else {
-            self.clients.matchAll({ type: 'window' }).then(clients => {
-               clients.forEach(client => client.navigate(client.url));
+            self.clients.matchAll({ type: 'window' }).then((clients) => {
+                clients.forEach((client) => client.navigate(client.url));
             });
         }
     });
@@ -51,15 +53,19 @@ const fetchEvent = () => {
                 })
                 .catch((error) => {
                     console.error(`[uHTTP] Error to ${logLine}`, error);
-                    return new Response(`uHTTP Error: Service unavailable for this request. ${error}`, { status: 503 });
+                    return new Response(
+                        `uHTTP Error: Service unavailable for this request. ${error}`,
+                        { status: 503 },
+                    );
                 });
             e.respondWith(chain);
         } else {
-            console.warn(`[uHTTP] Request to ${reqHostname} is NOT routed through uHTTP as it goes to privte IP range`);
+            console.warn(
+                `[uHTTP] Request to ${reqHostname} is NOT routed through uHTTP as it goes to privte IP range`,
+            );
             const chain = fetch(e.request).then((res) => res);
             e.respondWith(chain);
         }
-
     });
 };
 
@@ -76,15 +82,19 @@ function reqLog(request) {
     return `${request.url}[${extra.join('|')}]`;
 }
 
-function isHostnamePublic(hostname){
+function isHostnamePublic(hostname) {
     let isPublic = true;
-    if (/^(10)\.(.*)\.(.*)\.(.*)$/.test(hostname)){ // 10.x.x.x
+    if (/^(10)\.(.*)\.(.*)\.(.*)$/.test(hostname)) {
+        // 10.x.x.x
         isPublic = false;
-    } else if (/^(172)\.(1[6-9]|2[0-9]|3[0-1])\.(.*)\.(.*)$/.test(hostname)){ // 172.16.x.x - 172.31.255.255
+    } else if (/^(172)\.(1[6-9]|2[0-9]|3[0-1])\.(.*)\.(.*)$/.test(hostname)) {
+        // 172.16.x.x - 172.31.255.255
         isPublic = false;
-    } else if (/^(192)\.(168)\.(.*)\.(.*)$/.test(hostname)){ // 192.168.x.x
+    } else if (/^(192)\.(168)\.(.*)\.(.*)$/.test(hostname)) {
+        // 192.168.x.x
         isPublic = false;
-    } else if (hostname === 'localhost' || hostname === '127.0.0.1'){ // localhost
+    } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // localhost
         isPublic = false;
     }
     return isPublic;
@@ -92,13 +102,12 @@ function isHostnamePublic(hostname){
 
 fetchEvent();
 
-
-broadcastChannel.addEventListener("message", async function eventListener(event) {
-    if(!uClient) console.warn('[SW] uHTTP is undefined');
-    if(event.data.message === "uHTTP-ready?" && uClient) {
+broadcastChannel.addEventListener('message', async function eventListener(event) {
+    if (!uClient) console.warn('[SW] uHTTP is undefined');
+    if (event.data.message === 'uHTTP-ready?' && uClient) {
         const isReady = await uClient.isReady(10_000);
-        if(isReady) {
-            broadcastChannel.postMessage({ message: "uHTTP-is-ready" })
+        if (isReady) {
+            broadcastChannel.postMessage({ message: 'uHTTP-is-ready' });
         }
     }
-})
+});

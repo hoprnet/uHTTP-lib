@@ -12,7 +12,6 @@ npm i @hoprnet/uhttp-lib
 
 The package has to be added to main dependencies and not the devDependencies.
 
-
 Add `uhttp-post-build-react" to your build process right after the build is finished:
 
 eg:
@@ -23,7 +22,6 @@ eg:
     "build:uHTTP": "tsc && vite build && uhttp-post-build-react",
   }
 ```
-
 
 .env:
 
