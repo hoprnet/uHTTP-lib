@@ -19,23 +19,23 @@ function main() {
 function createFileStructure() {
     console.log('Creating file structure');
 
-    fs.mkdirSync(`./build/uHTTP`, { recursive: true });
+    fs.mkdirSync('./build/uHTTP', { recursive: true });
 
     fs.copyFileSync(
-        `./node_modules/@hoprnet/uhttp-lib/service-worker/service-worker.js`,
-        `./build/service-worker.js`,
+        './node_modules/@hoprnet/uhttp-lib/service-worker/service-worker.js',
+        './build/service-worker.js',
     );
     console.log('/service-worker.js file copied');
 
     fs.copyFileSync(
-        `./node_modules/@hoprnet/uhttp-lib/service-worker/start-uHTTP.js`,
-        `./build/uHTTP/start-uHTTP.js`,
+        './node_modules/@hoprnet/uhttp-lib/service-worker/start-uHTTP.js',
+        './build/uHTTP/start-uHTTP.js',
     );
     console.log('/start-uHTTP.js file copied');
 
     fs.copyFileSync(
-        `./node_modules/@hoprnet/uhttp-lib/dist/uhttp-lib.min.mjs`,
-        `./build/uHTTP/uhttp-lib.min.mjs`,
+        './node_modules/@hoprnet/uhttp-lib/dist/uhttp-lib.min.mjs',
+        './build/uHTTP/uhttp-lib.min.mjs',
     );
     console.log('/uHTTP/uhttp-lib.min.mjs file copied');
 }
@@ -93,7 +93,7 @@ function preparePersonalasiedStartingScript(elements) {
 }
 
 function createAppendFunction(elements) {
-    let output = [`function appendPage() {`];
+    let output = ['function appendPage() {'];
 
     elements.map((element, index) => {
         output.push(`    const s${index} = document.createElement("${element.tag}");`);
@@ -107,6 +107,6 @@ function createAppendFunction(elements) {
         output.push(`    document.querySelector('head').append(s${index});`);
     });
 
-    output.push(`};`);
+    output.push('};');
     return output.join('\n');
 }
