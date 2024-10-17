@@ -29,4 +29,5 @@ eg:
 uClientId = XXXX
 uForceZeroHop = true
 discoveryPlatformEndpoint = https://discovery-platform.hoprnet.link
+buildFolderPath = ./build/cowswap #default is ./build
 ```

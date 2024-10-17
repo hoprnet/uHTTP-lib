@@ -19,23 +19,25 @@ function main() {
 function createFileStructure() {
     console.log('Creating file structure');
 
-    fs.mkdirSync('./build/uHTTP', { recursive: true });
+    const buildFolderPath = process.env.buildFolderPath || './build'
+
+    fs.mkdirSync(`${buildFolderPath}/uHTTP`, { recursive: true });
 
     fs.copyFileSync(
         './node_modules/@hoprnet/uhttp-lib/service-worker/service-worker.js',
-        './build/service-worker.js',
+        `${buildFolderPath}/service-worker.js`,
     );
     console.log('/service-worker.js file copied');
 
     fs.copyFileSync(
         './node_modules/@hoprnet/uhttp-lib/service-worker/start-uHTTP.js',
-        './build/uHTTP/start-uHTTP.js',
+        `${buildFolderPath}/uHTTP/start-uHTTP.js`,
     );
     console.log('/start-uHTTP.js file copied');
 
     fs.copyFileSync(
         './node_modules/@hoprnet/uhttp-lib/dist/uhttp-lib.min.mjs',
-        './build/uHTTP/uhttp-lib.min.mjs',
+        `${buildFolderPath}/uHTTP/uhttp-lib.min.mjs`,
     );
     console.log('/uHTTP/uhttp-lib.min.mjs file copied');
 }
