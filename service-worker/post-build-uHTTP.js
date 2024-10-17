@@ -82,7 +82,7 @@ function prepareNewIndexHTML(originalHTML) {
 }
 
 function preparePersonalasiedStartingScript(elements) {
-    let startuHTTPFile = fs.readFileSync('./build/uHTTP/start-uHTTP.js').toString();
+    let startuHTTPFile = fs.readFileSync(`${buildFolderPath}/uHTTP/start-uHTTP.js`).toString();
     startuHTTPFile = startuHTTPFile.replace('REPLACE_uClientId', process.env.uClientId);
     startuHTTPFile = startuHTTPFile.replace('REPLACE_uForceZeroHop', process.env.uForceZeroHop);
     startuHTTPFile = startuHTTPFile.replace(
@@ -91,7 +91,7 @@ function preparePersonalasiedStartingScript(elements) {
     );
     startuHTTPFile = startuHTTPFile.replace('REPLACE_uHTTPVersion', uHTTPVersion);
     startuHTTPFile = startuHTTPFile + createAppendFunction(elements);
-    fs.writeFileSync('./build/uHTTP/start-uHTTP.js', startuHTTPFile);
+    fs.writeFileSync(`${buildFolderPath}/uHTTP/start-uHTTP.js`, startuHTTPFile);
 }
 
 function createAppendFunction(elements) {
