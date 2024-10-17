@@ -44,12 +44,12 @@ function createFileStructure() {
 
 function getIndexHTML() {
     console.log('Loading original index.html');
-    return fs.readFileSync('./build/index.html').toString();
+    return fs.readFileSync(`${buildFolderPath}/index.html`).toString();
 }
 
 function saveIndexHTML(html) {
     console.log('Saving new uHTTP injected index.html');
-    return fs.writeFileSync('./build/index.html', html);
+    return fs.writeFileSync(`${buildFolderPath}/index.html`, html);
 }
 
 function getScriptsAndLinks(originalHTML) {
