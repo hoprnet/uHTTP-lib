@@ -19,7 +19,7 @@ function main() {
 function createFileStructure() {
     console.log('Creating file structure');
 
-    const buildFolderPath = process.env.buildFolderPath || './build'
+    const buildFolderPath = process.env.buildFolderPath || './build';
 
     fs.mkdirSync(`${buildFolderPath}/uHTTP`, { recursive: true });
 
