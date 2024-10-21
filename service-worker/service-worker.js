@@ -21,7 +21,7 @@ const activateEvent = () => {
         uClient = new Routing.Client(uClientId, {
             forceZeroHop,
             discoveryPlatformEndpoint,
-            timeout: 60_000,
+            timeout: 120_000,
         });
         const isReady = await uClient.isReady(60_000);
         console.log(
@@ -44,7 +44,7 @@ const fetchEvent = () => {
         const reqUrl = new URL(e.request.url);
         const reqHostname = reqUrl.hostname;
 
-        if (isHostnamePublic(reqHostname)) {
+        if (isIPorHostOnPublicNetw0rk(reqHostname)) {
             console.info(`[uHTTP] Request to ${reqHostname} is using uHTTP`);
             const chain = uClient
                 .fetch(e.request)
@@ -52,7 +52,7 @@ const fetchEvent = () => {
                     return res;
                 })
                 .catch((error) => {
-                    console.error(`[uHTTP] Error to ${logLine}`, error);
+                    console.error(`[uHTTP] Error to ${e.request.url}.\n${logLine}`, error);
                     return new Response(
                         `uHTTP Error: Service unavailable for this request. ${error}`,
                         { status: 503 },
@@ -82,7 +82,7 @@ function reqLog(request) {
     return `${request.url}[${extra.join('|')}]`;
 }
 
-function isHostnamePublic(hostname) {
+function isIPorHostOnPublicNetw0rk(hostname) {
     let isPublic = true;
     if (/^(10)\.(.*)\.(.*)\.(.*)$/.test(hostname)) {
         // 10.x.x.x
@@ -108,6 +108,8 @@ broadcastChannel.addEventListener('message', async function eventListener(event)
         const isReady = await uClient.isReady(10_000);
         if (isReady) {
             broadcastChannel.postMessage({ message: 'uHTTP-is-ready' });
+        } else {
+            broadcastChannel.postMessage({ message: 'uHTTP-is-NOT-ready' });
         }
     }
 });
