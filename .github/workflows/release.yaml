@@ -12,6 +12,14 @@ on:
                     - patch
                     - minor
                     - major
+            release_tag:
+                description: 'NPM release tag'
+                required: true
+                type: choice
+                default: 'latest'
+                options:
+                    - latest
+                    - beta
 
 concurrency:
     group: release
@@ -108,7 +116,7 @@ jobs:
 
             - name: Publish to Google Artifact Registry
               if: steps.unpublish.outputs.already_released != 'true'
-              run: yarn publish --tag latest
+              run: yarn publish --tag ${{ inputs.release_tag }}
               env:
                   NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
 
@@ -122,7 +130,7 @@ jobs:
 
             - name: Publish to npm
               run: |
-                  yarn publish --no-git-tag-version --tag latest
+                  yarn publish --no-git-tag-version --tag ${{ inputs.release_tag }}
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
