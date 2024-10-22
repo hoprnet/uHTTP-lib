@@ -4,14 +4,10 @@ on:
     workflow_dispatch:
         inputs:
             release_type:
-                description: 'Next version type'
+                description: 'Next version type: [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
                 required: true
-                type: choice
+                type: string
                 default: 'patch'
-                options:
-                    - patch
-                    - minor
-                    - major
             release_tag:
                 description: 'NPM release tag'
                 required: true
