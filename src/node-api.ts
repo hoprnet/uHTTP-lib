@@ -78,6 +78,22 @@ export function connectWS(conn: ConnInfo): WebSocket {
     return new WebSocket(wsURL);
 }
 
+export async function openSession(
+    conn: ConnInfo & { hops?: number },
+    { destination, target }: { destination: string; target: string },
+) {
+    const url = new URL('/api/v3/session/websocket', conn.apiEndpoint);
+    url.protocol = conn.apiEndpoint.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.searchParams.append('api_token', conn.accessToken);
+    url.searchParams.append('capabilities', 'Segmentation');
+    url.searchParams.append('capabilities', 'Retransmission');
+    url.searchParams.append('target', target);
+    url.searchParams.append('destination', destination);
+    // default to 1hop
+    url.searchParams.append('hops', `${conn.hops ? conn.hops : 1}`);
+    return new WebSocket(url);
+}
+
 export async function sendMessage(
     conn: ConnInfo & { hops?: number; relay?: string },
     { recipient, tag, message }: { recipient: string; tag: number; message: string },
