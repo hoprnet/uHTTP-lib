@@ -18,8 +18,7 @@
     },
     "license": "GPL-3.0",
     "scripts": {
-        "prebuild": "node -p \"'export default \\'' + require('./package.json').version + '\\';'\" > src/version.ts",
-        "build": "yarn prebuild && tsc",
+        "build": "tsc",
         "format": "prettier --write src/ .github/ *.js *.ts *.json *.md",
         "format:ci": "prettier --check src/ .github/ *.js *.ts *.json *.md",
         "lint": "eslint --fix src/",
