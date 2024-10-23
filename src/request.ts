@@ -3,6 +3,7 @@ import * as Crypto from '@hoprnet/uhttp-crypto';
 import * as Res from './result';
 import * as Payload from './payload';
 import * as Segment from './segment';
+import * as Frame from './frame';
 import * as Utils from './utils';
 
 export type Request = {
@@ -170,6 +171,16 @@ export function toSegments(req: Request, session: Crypto.Session): Segment.Segme
     const pIdBytes = Utils.stringToBytes(req.entryPeerId);
     const body = Utils.concatBytes(pIdBytes, reqData);
     return Segment.toSegments(req.id, body);
+}
+
+/**
+ * Convert request to byte frames usable for websocket piping.
+ */
+export function toFrames(req: Request, session: Crypto.Session): Segment.Segment[] {
+    // we need the entry id ouside of of the actual encrypted payload
+    const reqData = session.request as Uint8Array;
+    const eIdBytes = Utils.stringToBytes(req.entryPeerId);
+    return Frame.toFrames(eIdBytes, reqData);
 }
 
 /**
