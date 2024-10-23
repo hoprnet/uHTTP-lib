@@ -1,33 +1,39 @@
-// Maximum bytes we can shuffle at once through the websocket connection - FRAME_SIZE
-const MaxBytes = 3562;
+import * as Res from './result';
+import * as Utils from './utils';
 
-export type Frame = number;
+// Maximum bytes we can shuffle at once through the websocket connection.
+// Anything bigger get silently lost.
+const MaxBytes = 3632;
 
+export type Frame = Uint8Array;
+
+///
+// Simple byte protocol:
+//
+// 1st byte - version
+// 2nd to 5th byte - total length
+// 6th to last byte - data (length long)
 const ProtocolVersion = 0x01;
 const SizeBytesLen = 4;
 
 /**
  * Slice data into frames.
  */
-export function toFrames(data: Uint8Array): Frame[] {
+export function toFrames(data: Uint8Array): Res.Result<Frame[]> {
     const bytelen = data.length;
- 
-    ut
-    
-    const 
-    const base64Str = Utils.bytesToBase64(data);
-    const totalCount = Math.ceil(base64Str.length / MaxBytes);
-
-    const segments = [];
-    for (let i = 0; i < totalCount; i++) {
-        const body = base64Str.slice(i * MaxBytes, (i + 1) * MaxBytes);
-        segments.push({
-            requestId,
-            nr: i,
-            totalCount,
-            body,
-        });
+    const countBytes = Utils.integerToBytes(bytelen);
+    if (countBytes.length > SizeBytesLen) {
+        return Res.err(`request exceeds max size of ${Math.pow(256, SizeBytesLen)} bytes`);
     }
-    return segments;
-}
 
+    const protocolData = Utils.concatBytes(new Uint8Array([ProtocolVersion]), countBytes);
+    const allData = Utils.concatBytes(protocolData, data);
+
+    const totalLength = allData.length;
+    const frames: Uint8Array[] = [];
+    for (let i = 0; i < totalLength; i++) {
+        const bytes = allData.slice(i * MaxBytes, (i + 1) * MaxBytes);
+        frames.push(bytes);
+    }
+    return Res.ok(frames);
+}

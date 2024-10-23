@@ -127,6 +127,17 @@ export function hexStringToBytes(hexString: string) {
     return uint8Array;
 }
 
+export function integerToBytes(value: number): Uint8Array {
+    const length = Math.ceil(Math.log2(value + 1) / 8);
+    const uint8Array = new Uint8Array(length);
+    let conv = value;
+    for (let i = length - 1; i >= 0; i--) {
+        uint8Array[i] = conv & 0xff; // Get the least significant byte
+        conv = conv >> 8;
+    }
+    return uint8Array;
+}
+
 export function versionCompare(ref: string, version: string): Res.Result<VrsnCmp> {
     const r = ref.split('.');
     if (r.length < 3) {
