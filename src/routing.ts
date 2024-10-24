@@ -326,52 +326,39 @@ export class Client {
 
         let ws: WebSocket;
         try {
-            log.info('FOOBAR1');
             ws = NodeAPI.openSession(conn, {
                 destination: exitNode.id,
                 // TODO remove hardcoded target
                 target: '127.0.0.1:43212',
             });
-            log.info('FOOBAR2');
         } catch (err) {
             log.error('error opening session from %s to %s: %o', entryNode.id, exitNode.id, err);
             this.removeRequest(request);
             return cacheEntry.reject('Sending request failed');
         }
 
-        log.info('FOOBAR3');
         ws.on('open', () => {
-            log.info('FOOBAR10', frames);
             const aft = performance.now();
             request.lastSegmentEndedAt = aft;
             // const dur = Math.round(aft - bef);
             // this.nodesColl.segmentSucceeded(request, segment, dur);
             frames.forEach((f) => {
-                log.info('push frame', f.length, f);
                 ws.send(f);
             });
-            log.info('FOOBAR11');
         });
 
-        log.info('FOOBAR4');
         ws.on('error', (err: any) => {
-            log.info('FOOBAR12');
             log.error('error on session socket to %s: %o', entryNode.id, err);
             this.removeRequest(request);
-            log.info('FOOBAR13');
             return cacheEntry.reject('Session socket broken');
         });
 
-        log.info('FOOBAR5');
         ws.on('close', (closeEvent: any) => {
-            log.info('FOOBAR14');
             log.verbose('closing session to %s: %o', entryNode.id, closeEvent);
         });
 
-        log.info('FOOBAR6');
         let responseWrapper: Frame.ResponseWrapper;
         ws.on('message', (incBuffer: ArrayBuffer) => {
-            log.info('FOOBAR15');
             const data = new Uint8Array(incBuffer);
             if (responseWrapper) {
                 Frame.concatData(responseWrapper, data);
@@ -387,7 +374,6 @@ export class Client {
                 this.onIncomingResponse(responseWrapper, request.id);
             }
         });
-        log.info('FOOBAR7');
     };
 
     private onIncomingResponse = (responseWrapper: Frame.ResponseWrapper, requestId: string) => {

@@ -90,13 +90,15 @@ export function create({
 
     const json = JSON.stringify(resEncode.res);
     const data = Utils.stringToBytes(json);
-    const resBox = Crypto.boxRequest({
+
+    const params = {
         message: data,
         exitPeerId,
         uuid: id,
         exitPublicKey,
         counterOffset,
-    });
+    };
+    const resBox = Crypto.boxRequest(params);
     if (Crypto.isError(resBox)) {
         return Res.err(resBox.error);
     }
@@ -132,12 +134,13 @@ export function messageToReq({
     exitPeerId: string;
     exitPrivateKey: Uint8Array;
 }): Res.Result<UnboxRequest> {
-    const resUnbox = Crypto.unboxRequest({
+    const params = {
         message,
         uuid: requestId,
         exitPeerId,
         exitPrivateKey,
-    });
+    };
+    const resUnbox = Crypto.unboxRequest(params);
     if (Crypto.isError(resUnbox)) {
         return Res.err(resUnbox.error);
     }
