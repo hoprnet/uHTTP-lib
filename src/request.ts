@@ -176,11 +176,10 @@ export function toSegments(req: Request, session: Crypto.Session): Segment.Segme
 /**
  * Convert request to byte frames usable for websocket piping.
  */
-export function toFrames(req: Request, session: Crypto.Session): Segment.Segment[] {
+export function toFrames(req: Request, session: Crypto.Session): Res.Result<Frame.Frame[]> {
     // we need the entry id ouside of of the actual encrypted payload
     const reqData = session.request as Uint8Array;
-    const eIdBytes = Utils.stringToBytes(req.entryPeerId);
-    return Frame.toFrames(eIdBytes, reqData);
+    return Frame.toFrames(req.entryPeerId, req.id, reqData);
 }
 
 /**
