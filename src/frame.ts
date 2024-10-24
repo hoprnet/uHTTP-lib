@@ -48,7 +48,6 @@ export function toRequestFrames(
     data: Uint8Array,
 ): Res.Result<Frame[]> {
     const bytelen = data.length;
-    console.log('bytelen', bytelen);
     const countBytes = Utils.integerToBytes(bytelen);
     if (countBytes.length > SizeBytesLen) {
         return Res.err(`request exceeds max size of ${Math.pow(256, SizeBytesLen)} bytes`);
@@ -57,26 +56,19 @@ export function toRequestFrames(
     // pad to SizeBytesLen
     const paddedSize = new Uint8Array(SizeBytesLen);
     paddedSize.set(countBytes, SizeBytesLen - countBytes.length);
-    console.log('paddedSize', paddedSize.length, paddedSize);
 
     // fill protocol data
     const pData1 = Utils.concatBytes(new Uint8Array([ProtocolVersion]), paddedSize);
-    console.log('pData1', pData1.length, pData1);
     const eIdBytes = Utils.stringToBytes(entryId);
     const pData2 = Utils.concatBytes(pData1, eIdBytes);
-    console.log('pData2', pData2.length, pData2);
     const reqIdBytes = Utils.stringToBytes(requestId);
-    console.log('reqIdBytes', reqIdBytes.length, reqIdBytes, requestId);
     const pData3 = Utils.concatBytes(pData2, reqIdBytes);
-    console.log('pData3', pData3.length, pData3);
     const allData = Utils.concatBytes(pData3, data);
-    console.log('allData', allData.length, allData);
 
     const slices = Math.ceil(allData.length / MaxBytes);
     const frames: Uint8Array[] = [];
     for (let i = 0; i < slices; i++) {
         const bytes = allData.slice(i * MaxBytes, (i + 1) * MaxBytes);
-        console.log('actual frame', bytes.length, bytes);
         frames.push(bytes);
     }
     return Res.ok(frames);
@@ -118,15 +110,9 @@ export function toRequestFrameWrapper(data: Frame): Res.Result<RequestWrapper> {
         return Res.err(`unsupported protocol version: ${version}`);
     }
 
-    const array = new Uint8Array(data);
-    console.log('array', array);
-
     const length = Utils.bytesToInteger(data.slice(1, 5));
-    console.log('length', length);
     const entryId = Utils.bytesToString(data.slice(5, 57));
-    console.log('entryId', entryId);
     const requestId = Utils.bytesToString(data.slice(57, 93));
-    console.log('requestId', requestId);
     return Res.ok({
         length,
         entryId,
