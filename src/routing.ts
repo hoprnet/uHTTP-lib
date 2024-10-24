@@ -336,7 +336,7 @@ export class Client {
             ws = NodeAPI.openSession(conn, {
                 destination: exitNode.id,
                 // TODO remove hardcoded target
-                target: '127.0.0.1:43212',
+                target: `${resTarget.res}:43212`,
             });
         } catch (err) {
             log.error('error opening session from %s to %s: %o', entryNode.id, exitNode.id, err);
