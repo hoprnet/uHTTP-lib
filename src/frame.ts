@@ -25,10 +25,10 @@ export type ResponseWrapper = {
 // Request:
 //
 // idx 0 : version
-// idx 1 - 5 (4 bytes) : total length
-// idx 5 - 57 (52 bytes) : entry peerId
-// idx 58 - 90 (32 bytes) : request UUID
-// idx 90 - end : data
+// idx 1 - 4 (4 bytes) : total length
+// idx 5 - 55 (52 bytes) : entry peerId
+// idx 56 - 92 (36 bytes) : request UUID
+// idx 93 - end : data
 //
 // Response
 //
@@ -48,22 +48,35 @@ export function toRequestFrames(
     data: Uint8Array,
 ): Res.Result<Frame[]> {
     const bytelen = data.length;
+    console.log('bytelen', bytelen);
     const countBytes = Utils.integerToBytes(bytelen);
     if (countBytes.length > SizeBytesLen) {
         return Res.err(`request exceeds max size of ${Math.pow(256, SizeBytesLen)} bytes`);
     }
 
-    const pData1 = Utils.concatBytes(new Uint8Array([ProtocolVersion]), countBytes);
+    // pad to SizeBytesLen
+    const paddedSize = new Uint8Array(SizeBytesLen);
+    paddedSize.set(countBytes, SizeBytesLen - countBytes.length);
+    console.log('paddedSize', paddedSize.length, paddedSize);
+
+    // fill protocol data
+    const pData1 = Utils.concatBytes(new Uint8Array([ProtocolVersion]), paddedSize);
+    console.log('pData1', pData1.length, pData1);
     const eIdBytes = Utils.stringToBytes(entryId);
     const pData2 = Utils.concatBytes(pData1, eIdBytes);
+    console.log('pData2', pData2.length, pData2);
     const reqIdBytes = Utils.stringToBytes(requestId);
+    console.log('reqIdBytes', reqIdBytes.length, reqIdBytes, requestId);
     const pData3 = Utils.concatBytes(pData2, reqIdBytes);
+    console.log('pData3', pData3.length, pData3);
     const allData = Utils.concatBytes(pData3, data);
+    console.log('allData', allData.length, allData);
 
-    const totalLength = allData.length;
+    const slices = Math.ceil(allData.length / MaxBytes);
     const frames: Uint8Array[] = [];
-    for (let i = 0; i < totalLength; i++) {
+    for (let i = 0; i < slices; i++) {
         const bytes = allData.slice(i * MaxBytes, (i + 1) * MaxBytes);
+        console.log('actual frame', bytes.length, bytes);
         frames.push(bytes);
     }
     return Res.ok(frames);
@@ -79,12 +92,17 @@ export function toResponseFrames(data: Uint8Array): Res.Result<Frame[]> {
         return Res.err(`response exceeds max size of ${Math.pow(256, SizeBytesLen)} bytes`);
     }
 
-    const pData1 = Utils.concatBytes(new Uint8Array([ProtocolVersion]), countBytes);
+    // pad to SizeBytesLen
+    const paddedSize = new Uint8Array(SizeBytesLen);
+    paddedSize.set(countBytes, SizeBytesLen - countBytes.length);
+
+    // fill protocol data
+    const pData1 = Utils.concatBytes(new Uint8Array([ProtocolVersion]), paddedSize);
     const allData = Utils.concatBytes(pData1, data);
 
-    const totalLength = allData.length;
+    const slices = Math.ceil(allData.length / MaxBytes);
     const frames: Uint8Array[] = [];
-    for (let i = 0; i < totalLength; i++) {
+    for (let i = 0; i < slices; i++) {
         const bytes = allData.slice(i * MaxBytes, (i + 1) * MaxBytes);
         frames.push(bytes);
     }
@@ -92,7 +110,7 @@ export function toResponseFrames(data: Uint8Array): Res.Result<Frame[]> {
 }
 
 export function toRequestFrameWrapper(data: Frame): Res.Result<RequestWrapper> {
-    if (data.length < 58) {
+    if (data.length < 94) {
         return Res.err(`too short for a first request frame: only ${data.length} bytes`);
     }
     const version = data[0];
@@ -100,13 +118,19 @@ export function toRequestFrameWrapper(data: Frame): Res.Result<RequestWrapper> {
         return Res.err(`unsupported protocol version: ${version}`);
     }
 
+    const array = new Uint8Array(data);
+    console.log('array', array);
+
     const length = Utils.bytesToInteger(data.slice(1, 5));
+    console.log('length', length);
     const entryId = Utils.bytesToString(data.slice(5, 57));
-    const requestId = Utils.bytesToString(data.slice(57, 89));
+    console.log('entryId', entryId);
+    const requestId = Utils.bytesToString(data.slice(57, 93));
+    console.log('requestId', requestId);
     return Res.ok({
         length,
         entryId,
-        data: data.slice(58),
+        data: data.slice(93),
         requestId,
     });
 }
