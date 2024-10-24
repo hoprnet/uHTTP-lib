@@ -3,6 +3,7 @@ import * as Crypto from '@hoprnet/uhttp-crypto';
 import * as Res from './result';
 import * as Payload from './payload';
 import * as Segment from './segment';
+import * as Frame from './frame';
 import * as Utils from './utils';
 
 export type Request = {
@@ -89,13 +90,15 @@ export function create({
 
     const json = JSON.stringify(resEncode.res);
     const data = Utils.stringToBytes(json);
-    const resBox = Crypto.boxRequest({
+
+    const params = {
         message: data,
         exitPeerId,
         uuid: id,
         exitPublicKey,
         counterOffset,
-    });
+    };
+    const resBox = Crypto.boxRequest(params);
     if (Crypto.isError(resBox)) {
         return Res.err(resBox.error);
     }
@@ -131,12 +134,13 @@ export function messageToReq({
     exitPeerId: string;
     exitPrivateKey: Uint8Array;
 }): Res.Result<UnboxRequest> {
-    const resUnbox = Crypto.unboxRequest({
+    const params = {
         message,
         uuid: requestId,
         exitPeerId,
         exitPrivateKey,
-    });
+    };
+    const resUnbox = Crypto.unboxRequest(params);
     if (Crypto.isError(resUnbox)) {
         return Res.err(resUnbox.error);
     }
@@ -170,6 +174,15 @@ export function toSegments(req: Request, session: Crypto.Session): Segment.Segme
     const pIdBytes = Utils.stringToBytes(req.entryPeerId);
     const body = Utils.concatBytes(pIdBytes, reqData);
     return Segment.toSegments(req.id, body);
+}
+
+/**
+ * Convert request to byte frames usable for websocket piping.
+ */
+export function toFrames(req: Request, session: Crypto.Session): Res.Result<Frame.Frame[]> {
+    // we need the entry id ouside of of the actual encrypted payload
+    const reqData = session.request as Uint8Array;
+    return Frame.toRequestFrames(req.entryPeerId, req.id, reqData);
 }
 
 /**

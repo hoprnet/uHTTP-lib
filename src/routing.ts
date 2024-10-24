@@ -1,10 +1,14 @@
+import WebSocket = require('isomorphic-ws');
+
 import * as EntryNode from './entry-node';
-import * as NodeAPI from './node-api';
-import * as NodesCollector from './routing/nodes-collector';
-import * as Payload from './payload';
+import * as ExitNode from './exit-node';
+import * as Frame from './frame';
 import * as IntReq from './request';
 import * as IntReqCache from './routing/request-cache';
 import * as IntResp from './response';
+import * as NodeAPI from './node-api';
+import * as NodesCollector from './routing/nodes-collector';
+import * as Payload from './payload';
 import * as Result from './result';
 import * as RoutingUtils from './routing/utils';
 import * as Segment from './segment';
@@ -275,9 +279,12 @@ export class Client {
             throw new Error('Unable to create request object');
         }
 
-        // split request to segments
         const { request, session } = resReq.res;
-        const segments = IntReq.toSegments(request, session);
+        const resFrames = IntReq.toFrames(request, session);
+        if (Result.isErr(resFrames)) {
+            log.error('error creating frames: %o', resFrames.error);
+            throw new Error('Unable to slice request into binary data');
+        }
 
         return new Promise((resolve, reject) => {
             // set request expiration timer
@@ -297,17 +304,101 @@ export class Client {
             });
             this.nodesColl.requestStarted(request);
 
-            // send request to hoprd
-            log.info('sending request %s', IntReq.prettyPrint(request));
+            this.sendFrames(request, resFrames.res, entryNode, exitNode, entry);
+        });
+    };
 
-            // queue segment sending for all of them
-            segments.forEach((s, idx) => {
-                setTimeout(() => {
-                    this.nodesColl.segmentStarted(request, s);
-                    this.sendSegment(request, s, entryNode, entry);
-                }, idx);
+    private sendFrames = (
+        request: IntReq.Request,
+        frames: Frame.Frame[],
+        entryNode: EntryNode.EntryNode,
+        exitNode: ExitNode.ExitNode,
+        cacheEntry: IntReqCache.Entry,
+    ) => {
+        // TODO measure sending perf
+        // const bef = performance.now();
+        log.info('sending request %s', IntReq.prettyPrint(request));
+        const conn = {
+            apiEndpoint: entryNode.apiEndpoint,
+            accessToken: entryNode.accessToken,
+            hops: request.hops,
+        };
+
+        const resTarget = hardcodedDebugEndpointToChangeForMichal(exitNode.id);
+        if (Result.isErr(resTarget)) {
+            log.error('could not determine hardcoded target - call michal');
+            this.removeRequest(request);
+            return cacheEntry.reject('missing failed');
+        }
+
+        let ws: WebSocket;
+        try {
+            ws = NodeAPI.openSession(conn, {
+                destination: exitNode.id,
+                // TODO remove hardcoded target
+                target: `${resTarget.res}:43212`,
+            });
+        } catch (err) {
+            log.error('error opening session from %s to %s: %o', entryNode.id, exitNode.id, err);
+            this.removeRequest(request);
+            return cacheEntry.reject('Sending request failed');
+        }
+
+        ws.on('open', () => {
+            const aft = performance.now();
+            request.lastSegmentEndedAt = aft;
+            // const dur = Math.round(aft - bef);
+            // this.nodesColl.segmentSucceeded(request, segment, dur);
+            frames.forEach((f) => {
+                ws.send(f);
             });
         });
+
+        ws.on('error', (err: any) => {
+            log.error('error on session socket to %s: %o', entryNode.id, err);
+            this.removeRequest(request);
+            return cacheEntry.reject('Session socket broken');
+        });
+
+        ws.on('close', (closeEvent: any) => {
+            log.verbose('closing session to %s: %o', entryNode.id, closeEvent);
+        });
+
+        let responseWrapper: Frame.ResponseWrapper;
+        ws.on('message', (incBuffer: ArrayBuffer) => {
+            const data = new Uint8Array(incBuffer);
+            if (responseWrapper) {
+                Frame.concatData(responseWrapper, data);
+            } else {
+                const resWrap = Frame.toResponseFrameWrapper(data);
+                if (Result.isErr(resWrap)) {
+                    log.warn('discarding received %d bytes: %s', data.length, resWrap.error);
+                    return;
+                }
+                responseWrapper = resWrap.res;
+            }
+            if (Frame.isComplete(responseWrapper)) {
+                this.onIncomingResponse(responseWrapper, request.id);
+                ws.close();
+            }
+        });
+    };
+
+    private onIncomingResponse = (responseWrapper: Frame.ResponseWrapper, requestId: string) => {
+        const reqEntry = this.requestCache.get(requestId) as IntReqCache.Entry;
+        const { request, session } = reqEntry;
+        IntReqCache.remove(this.requestCache, request.id);
+
+        const resUnbox = IntResp.messageToResp({
+            respData: responseWrapper.data,
+            request,
+            session,
+        });
+        if (Result.isErr(resUnbox)) {
+            return this.responseError(resUnbox.error, reqEntry);
+        }
+
+        return this.responseSuccess(resUnbox.res, reqEntry);
     };
 
     /**
@@ -717,4 +808,25 @@ export function isLatencyStatistics(
     stats: LatencyStatistics | ReducedLatencyStatistics,
 ): stats is LatencyStatistics {
     return 'hoprDur' in stats;
+}
+
+//TODO
+function hardcodedDebugEndpointToChangeForMichal(peerId: string): Result.Result<string> {
+    const lookup: Record<string, string> = {
+        // uhttp-instance-green-australia-1 - https://uhttp-green-node-4.uhttp.staging.hoprnet.link:443
+        '12D3KooWQ8cRPMHujqh44ESBpKDvix5qDJek1zs7kzDrsZRtUt7C': '34.40.142.125',
+        // uhttp-instance-green-brazil-1 - https://uhttp-green-node-3.uhttp.staging.hoprnet.link:443
+        '12D3KooWBE92MZ89J4m1S8JsL82DnRoiLyZ66q1ei6Ukic5mrkGc': '34.39.144.151',
+        // uhttp-instance-green-hongkong-1 - https://uhttp-green-node-5.uhttp.staging.hoprnet.link:443
+        '12D3KooWErf7p1g5ZpmBBUM8aaXEXAbiGJjkMGBdUjXoS7vtLzrL': '34.92.49.100',
+        // uhttp-instance-green-iowa-1 - https://uhttp-green-node-2.uhttp.staging.hoprnet.link:443
+        '12D3KooWKv4bER7BtF5asPKfB8MBe9hVprSovqXzVD3kZYPKGjeX': '34.31.12.99',
+        // uhttp-instance-green-switzerland-1 - https://uhttp-green-node-1.uhttp.staging.hoprnet.link:443
+        '12D3KooWCsseMKfyBNxKUfXtYZSMVfw4d11jkBAKa3XtdaQJHvQr': '34.65.117.167',
+    };
+    const res = lookup[peerId];
+    if (res) {
+        Result.ok(res);
+    }
+    return Result.err('no target');
 }

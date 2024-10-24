@@ -71,11 +71,33 @@ export type NodeChannels = {
     outgoing: PartChannel[];
 };
 
-export function connectWS(conn: ConnInfo): WebSocket {
-    const wsURL = new URL('/api/v3/messages/websocket', conn.apiEndpoint);
-    wsURL.protocol = conn.apiEndpoint.protocol === 'https:' ? 'wss:' : 'ws:';
-    wsURL.search = `?apiToken=${conn.accessToken}`;
+export function connectWS({
+    apiEndpoint,
+    accessToken,
+}: {
+    apiEndpoint: URL;
+    accessToken: string;
+}): WebSocket {
+    const wsURL = new URL('/api/v3/messages/websocket', apiEndpoint);
+    wsURL.protocol = apiEndpoint.protocol === 'https:' ? 'wss:' : 'ws:';
+    wsURL.search = `?apiToken=${accessToken}`;
     return new WebSocket(wsURL);
+}
+
+export function openSession(
+    { apiEndpoint, accessToken, hops }: { apiEndpoint: URL; accessToken: string; hops?: number },
+    { destination, target }: { destination: string; target: string },
+) {
+    const url = new URL('/api/v3/session/websocket', apiEndpoint);
+    url.protocol = apiEndpoint.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.searchParams.append('api_token', accessToken);
+    url.searchParams.append('capabilities', 'Segmentation');
+    url.searchParams.append('capabilities', 'Retransmission');
+    url.searchParams.append('target', target);
+    url.searchParams.append('destination', destination);
+    // default to 1hop
+    url.searchParams.append('hops', `${hops ? hops : 1}`);
+    return new WebSocket(url);
 }
 
 export async function sendMessage(

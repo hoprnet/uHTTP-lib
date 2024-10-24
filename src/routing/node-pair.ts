@@ -328,7 +328,6 @@ function fetchMessages(np: NodePair) {
     const bef = performance.now();
     NodeAPI.retrieveMessages({ ...np.entryNode, pinnedFetch: np.pinnedFetch }, np.applicationTag)
         .then(({ messages }) => {
-            np.log.verbose('got %d messages', messages.length);
             const lat = Math.round(performance.now() - bef);
             np.entryData.fetchMessagesSuccesses++;
             np.entryData.fetchMessagesLatencies.push(lat);
