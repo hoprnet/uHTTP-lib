@@ -84,7 +84,7 @@ export function connectWS({
     return new WebSocket(wsURL);
 }
 
-export async function openSession(
+export function openSession(
     { apiEndpoint, accessToken, hops }: { apiEndpoint: URL; accessToken: string; hops?: number },
     { destination, target }: { destination: string; target: string },
 ) {
