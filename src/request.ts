@@ -179,7 +179,7 @@ export function toSegments(req: Request, session: Crypto.Session): Segment.Segme
 export function toFrames(req: Request, session: Crypto.Session): Res.Result<Frame.Frame[]> {
     // we need the entry id ouside of of the actual encrypted payload
     const reqData = session.request as Uint8Array;
-    return Frame.toFrames(req.entryPeerId, req.id, reqData);
+    return Frame.toRequestFrames(req.entryPeerId, req.id, reqData);
 }
 
 /**
