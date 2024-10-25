@@ -4,7 +4,7 @@ import WebSocket = require('isomorphic-ws');
  * to be replaced with HOPR sdk soon.
  */
 export type ConnInfo = {
-    apiEndpoint: URL;
+    apiEndpoint: string;
     accessToken: string;
     pinnedFetch: typeof globalThis.fetch;
 };
@@ -85,11 +85,11 @@ export function connectWS({
 }
 
 export function openSession(
-    { apiEndpoint, accessToken, hops }: { apiEndpoint: URL; accessToken: string; hops?: number },
+    { apiEndpoint, accessToken, hops }: { apiEndpoint: string; accessToken: string; hops?: number },
     { destination, target }: { destination: string; target: string },
 ) {
     const url = new URL('/api/v3/session/websocket', apiEndpoint);
-    url.protocol = apiEndpoint.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.protocol = url.protocol === 'https:' ? 'wss' : 'ws';
     url.searchParams.append('api_token', accessToken);
     url.searchParams.append('capabilities', 'Segmentation');
     url.searchParams.append('capabilities', 'Retransmission');

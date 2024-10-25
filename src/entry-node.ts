@@ -1,5 +1,5 @@
 export type EntryNode = {
-    apiEndpoint: URL;
+    apiEndpoint: string;
     accessToken: string;
     id: string;
     recommendedExits: string[];
