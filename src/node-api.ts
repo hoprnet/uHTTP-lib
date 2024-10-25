@@ -89,7 +89,10 @@ export function openSession(
     { destination, target }: { destination: string; target: string },
 ) {
     const url = new URL('/api/v3/session/websocket', apiEndpoint);
-    url.protocol = url.protocol === 'https:' ? 'wss' : 'ws';
+    const port = url.protocol === 'https:' ? 433 : 80;
+    const protocol = url.protocol === 'https:' ? 'wss' : 'ws';
+    url.port = `${port}`;
+    url.protocol = protocol;
     url.searchParams.append('api_token', accessToken);
     url.searchParams.append('capabilities', 'Segmentation');
     url.searchParams.append('capabilities', 'Retransmission');

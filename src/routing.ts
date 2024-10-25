@@ -343,12 +343,14 @@ export class Client {
             this.removeRequest(request);
             return cacheEntry.reject('Sending request failed');
         }
+        log.verbose('opening websocket connection to %s', entryNode.id);
 
         ws.on('open', () => {
             const aft = performance.now();
             request.lastSegmentEndedAt = aft;
             // const dur = Math.round(aft - bef);
             // this.nodesColl.segmentSucceeded(request, segment, dur);
+            log.verbose('sending %d frames to %s', frames.length, entryNode.id);
             frames.forEach((f) => {
                 ws.send(f);
             });
