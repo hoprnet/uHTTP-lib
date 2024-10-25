@@ -826,7 +826,7 @@ function hardcodedDebugEndpointToChangeForMichal(peerId: string): Result.Result<
     };
     const res = lookup[peerId];
     if (res) {
-        Result.ok(res);
+        return Result.ok(res);
     }
     return Result.err('no target');
 }
