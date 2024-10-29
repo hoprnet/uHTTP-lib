@@ -324,19 +324,11 @@ export class Client {
             hops: request.hops,
         };
 
-        const resTarget = hardcodedDebugEndpointToChangeForMichal(exitNode.id);
-        if (Result.isErr(resTarget)) {
-            log.error('could not determine hardcoded target - call michal');
-            this.removeRequest(request);
-            return cacheEntry.reject('missing failed');
-        }
-
         let ws: WebSocket;
         try {
             ws = NodeAPI.openSession(conn, {
                 destination: exitNode.id,
-                // TODO remove hardcoded target
-                target: `${resTarget.res}:43212`,
+                target: exitNode.target,
             });
         } catch (err) {
             log.error('error opening session from %s to %s: %o', entryNode.id, exitNode.id, err);
@@ -810,25 +802,4 @@ export function isLatencyStatistics(
     stats: LatencyStatistics | ReducedLatencyStatistics,
 ): stats is LatencyStatistics {
     return 'hoprDur' in stats;
-}
-
-//TODO
-function hardcodedDebugEndpointToChangeForMichal(peerId: string): Result.Result<string> {
-    const lookup: Record<string, string> = {
-        // uhttp-instance-green-australia-1 - https://uhttp-green-node-4.uhttp.staging.hoprnet.link:443
-        '12D3KooWQ8cRPMHujqh44ESBpKDvix5qDJek1zs7kzDrsZRtUt7C': '34.40.142.125',
-        // uhttp-instance-green-brazil-1 - https://uhttp-green-node-3.uhttp.staging.hoprnet.link:443
-        '12D3KooWBE92MZ89J4m1S8JsL82DnRoiLyZ66q1ei6Ukic5mrkGc': '34.39.144.151',
-        // uhttp-instance-green-hongkong-1 - https://uhttp-green-node-5.uhttp.staging.hoprnet.link:443
-        '12D3KooWErf7p1g5ZpmBBUM8aaXEXAbiGJjkMGBdUjXoS7vtLzrL': '34.92.49.100',
-        // uhttp-instance-green-iowa-1 - https://uhttp-green-node-2.uhttp.staging.hoprnet.link:443
-        '12D3KooWKv4bER7BtF5asPKfB8MBe9hVprSovqXzVD3kZYPKGjeX': '34.31.12.99',
-        // uhttp-instance-green-switzerland-1 - https://uhttp-green-node-1.uhttp.staging.hoprnet.link:443
-        '12D3KooWCsseMKfyBNxKUfXtYZSMVfw4d11jkBAKa3XtdaQJHvQr': '34.65.117.167',
-    };
-    const res = lookup[peerId];
-    if (res) {
-        return Result.ok(res);
-    }
-    return Result.err('no target');
 }
