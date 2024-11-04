@@ -10,7 +10,7 @@ import * as RoutingUtils from './routing/utils';
 import * as Segment from './segment';
 import * as SegmentCache from './segment-cache';
 import * as Utils from './utils';
-import Version from './version';
+import { version as Version } from '../package.json';
 
 /**
  * uHTTP settings configure global behaviour of routing client.
