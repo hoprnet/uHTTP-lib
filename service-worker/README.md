@@ -1,4 +1,4 @@
-Installation
+## Installation
 
 ```
 yarn add @hoprnet/uhttp-lib
@@ -29,5 +29,5 @@ eg:
 uClientId = XXXX
 uForceZeroHop = true
 discoveryPlatformEndpoint = https://discovery-platform.hoprnet.link
-buildFolderPath = ./build/cowswap #default is ./build
+buildFolderPath = ./special-build-path-if-not-default      #default is ./build
 ```

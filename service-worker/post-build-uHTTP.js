@@ -97,7 +97,7 @@ function preparePersonalasiedStartingScript(elements) {
 function createAppendFunction(elements) {
     let output = ['function appendPage() {'];
 
-    elements.map((element, index) => {
+    elements.forEach((element, index) => {
         output.push(`    const s${index} = document.createElement("${element.tag}");`);
         const attributes = element.attributes;
         const attributeNames = Object.keys(attributes);
