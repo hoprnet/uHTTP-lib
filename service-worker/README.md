@@ -23,11 +23,18 @@ eg:
   }
 ```
 
-.env:
+## Environment Configuration
 
-```
-uClientId = XXXX
+Create a `.env` file in your project root. Ensure this file is listed in your `.gitignore` to prevent committing sensitive values.
+
+```dotenv
+# Required - Keep this secure and never commit to version control
+uClientId = YOUR_CLIENT_ID
+
+# Optional - Network Configuration
 uForceZeroHop = true
 discoveryPlatformEndpoint = https://discovery-platform.hoprnet.link
+
+# Optional - Build Configuration
 buildFolderPath = ./special-build-path-if-not-default      #default is ./build
 ```
