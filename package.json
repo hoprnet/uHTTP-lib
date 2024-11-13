@@ -1,14 +1,18 @@
 {
     "name": "@hoprnet/uhttp-lib",
-    "version": "3.8.4",
+    "version": "3.9.0",
     "description": "u(nlinked)HTTP library",
     "author": "HOPR Association",
     "main": "./build/index.js",
     "types": "./build/index.d.ts",
     "files": [
         "build",
-        "dist"
+        "dist",
+        "service-worker"
     ],
+    "bin": {
+        "uhttp-post-build-react": "./service-worker/post-build-uHTTP.js"
+    },
     "keywords": [
         "hopr",
         "uHTTP"
@@ -18,7 +22,9 @@
     },
     "license": "GPL-3.0",
     "scripts": {
-        "build": "tsc",
+        "build": "yarn build:unbandled && yarn build:minified-bundle",
+        "build:unbandled": "tsc",
+        "build:minified-bundle": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/uhttp-lib.min.mjs",
         "format": "prettier --write src/ .github/ *.js *.ts *.json *.md",
         "format:ci": "prettier --check src/ .github/ *.js *.ts *.json *.md",
         "lint": "eslint --fix src/",
@@ -44,6 +50,7 @@
     },
     "dependencies": {
         "@hoprnet/uhttp-crypto": "^1.0.1",
+        "cheerio": "^1.0.0",
         "debug": "^4.3.4",
         "isomorphic-ws": "^5.0.0",
         "lz-string": "^1.5.0",
