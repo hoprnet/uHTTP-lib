@@ -15,7 +15,7 @@ function main() {
     const elements = getScriptsAndLinks(originalHTML);
     const newHTML = prepareNewIndexHTML(originalHTML);
     saveIndexHTML(newHTML);
-    preparePersonalasiedStartingScript(elements);
+    preparePersonalizedStartingScript(elements);
 }
 
 function createFileStructure() {
@@ -81,7 +81,7 @@ function prepareNewIndexHTML(originalHTML) {
     return output;
 }
 
-function preparePersonalasiedStartingScript(elements) {
+function preparePersonalizedStartingScript(elements) {
     let startuHTTPFile = fs.readFileSync(`${buildFolderPath}/uHTTP/start-uHTTP.js`).toString();
     startuHTTPFile = startuHTTPFile.replace('REPLACE_uClientId', process.env.uClientId);
     startuHTTPFile = startuHTTPFile.replace('REPLACE_uForceZeroHop', process.env.uForceZeroHop);

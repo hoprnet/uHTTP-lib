@@ -129,7 +129,7 @@ async function registerServiceWorker(tryOnce = false) {
         }
     }
 
-    console.info('[uHTTP] Sercice worker is controlling and active');
+    console.info('[uHTTP] Service worker is controlling and active');
     return serviceWorker;
 }
 
