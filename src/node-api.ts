@@ -93,11 +93,12 @@ export function openSession(
     const protocol = url.protocol === 'https:' ? 'wss' : 'ws';
     // url.port = `${port}`;
     url.protocol = protocol;
-    url.searchParams.append('api_token', accessToken);
+    url.searchParams.append('apiToken', accessToken);
     url.searchParams.append('capabilities', 'Segmentation');
     url.searchParams.append('capabilities', 'Retransmission');
     url.searchParams.append('target', target);
     url.searchParams.append('destination', destination);
+    url.searchParams.append('protocol', 'tcp');
     // default to 1hop
     url.searchParams.append('hops', `${hops ? hops : 1}`);
     return new WebSocket(url);
