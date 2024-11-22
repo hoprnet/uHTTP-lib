@@ -91,27 +91,16 @@ export function openSession(
     const url = new URL('/api/v3/session/websocket', apiEndpoint);
     // const port = url.protocol === 'https:' ? 433 : 80;
     const protocol = url.protocol === 'https:' ? 'wss' : 'ws';
-
     // url.port = `${port}`;
     url.protocol = protocol;
+    url.searchParams.append('api_token', accessToken);
     url.searchParams.append('capabilities', 'Segmentation');
     url.searchParams.append('capabilities', 'Retransmission');
     url.searchParams.append('target', target);
     url.searchParams.append('destination', destination);
     // default to 1hop
-    // url.searchParams.append('hops', `${hops ? hops : 0}`);
-    url.searchParams.append('hops', '0');
-    // Protocol to be used to connect to the target
-    url.searchParams.append("protocol", "tcp");
-
-    const options = {
-        headers: {
-            "X-Auth-Token": accessToken
-        }
-    };
-
-    console.log("Opening session with url: ", url.toString());
-    return new WebSocket(url, options);
+    url.searchParams.append('hops', `${hops ? hops : 1}`);
+    return new WebSocket(url);
 }
 
 export async function sendMessage(
