@@ -113,7 +113,6 @@ function scheduleReminder(cache: Cache, entry: Entry) {
     const timeout = entry.reminder
         ? SubsequentSegmentReminderTimeout
         : InitialSegmentReminderTimeout;
-    console.log('scheduling reminder with timeout', timeout);
     clearTimeout(entry.reminder);
     entry.reminder = setTimeout(() => remind(cache, entry.requestId), timeout);
 }

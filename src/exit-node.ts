@@ -3,6 +3,7 @@ import * as utils from './utils';
 export type ExitNode = {
     id: string;
     pubKey: string;
+    target: string;
 };
 
 export function prettyPrint(peerId: string, version: string, counter: number, relays?: string[]) {
