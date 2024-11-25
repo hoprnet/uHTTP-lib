@@ -22,6 +22,7 @@
     },
     "license": "GPL-3.0",
     "scripts": {
+        "login": "npx google-artifactregistry-auth",
         "build": "yarn build:unbandled && yarn build:minified-bundle",
         "build:unbandled": "tsc",
         "build:minified-bundle": "esbuild src/index.ts --bundle --minify --format=esm --outfile=dist/uhttp-lib.min.mjs",
