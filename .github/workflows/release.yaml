@@ -107,7 +107,7 @@ jobs:
               if: steps.unpublish.outputs.already_released != 'true'
               run: yarn publish --non-interactive --registry=https://europe-west3-npm.pkg.dev/hoprassociation/npm/ --tag release-candidate
               env:
-                NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
+                  NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -119,11 +119,11 @@ jobs:
 
             - name: Publish to npm
               run: |
-                rm .yarnrc
-                sed -i '/hoprassociation/d' .npmrc
-                echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
-                yarn publish --non-interactive --registry=https://registry.npmjs.org/ --no-git-tag-version --tag release-candidate
-                git checkout .npmrc .yarnrc
+                  rm .yarnrc
+                  sed -i '/hoprassociation/d' .npmrc
+                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
+                  yarn publish --non-interactive --registry=https://registry.npmjs.org/ --no-git-tag-version --tag release-candidate
+                  git checkout .npmrc .yarnrc
 
             - name: Bump Version
               id: bump
