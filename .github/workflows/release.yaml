@@ -4,18 +4,14 @@ on:
     workflow_dispatch:
         inputs:
             release_type:
-                description: 'Next version type: [<newversion> | major | minor | patch | premajor | preminor | prepatch | prerelease | from-git]'
-                required: true
-                type: string
-                default: 'patch'
-            release_tag:
-                description: 'NPM release tag'
+                description: 'Next version type'
                 required: true
                 type: choice
-                default: 'latest'
+                default: 'patch'
                 options:
-                    - latest
-                    - beta
+                    - patch
+                    - minor
+                    - major
 
 concurrency:
     group: release
@@ -48,9 +44,6 @@ jobs:
 
             - name: Building
               run: yarn build
-
-            - name: Bundling
-              run: yarn bundle
 
             - name: Linting
               run: yarn lint:ci
@@ -112,9 +105,9 @@ jobs:
 
             - name: Publish to Google Artifact Registry
               if: steps.unpublish.outputs.already_released != 'true'
-              run: yarn publish --tag ${{ inputs.release_tag }}
+              run: yarn publish --non-interactive --registry=https://europe-west3-npm.pkg.dev/hoprassociation/npm/ --tag release-candidate
               env:
-                  NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
+                NODE_AUTH_TOKEN: ${{ steps.gcp.outputs.access_token }}
 
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -126,9 +119,11 @@ jobs:
 
             - name: Publish to npm
               run: |
-                  yarn publish --no-git-tag-version --tag ${{ inputs.release_tag }}
-              env:
-                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                rm .yarnrc
+                sed -i '/hoprassociation/d' .npmrc
+                echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> .npmrc
+                yarn publish --non-interactive --registry=https://registry.npmjs.org/ --no-git-tag-version --tag release-candidate
+                git checkout .npmrc .yarnrc
 
             - name: Bump Version
               id: bump
